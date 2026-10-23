@@ -356,3 +356,21 @@ button.chip { background: none; font: inherit; font-size: 12px; }
 /* Tastaturfokus: Karten und Regler bekommen einen sichtbaren Ring */
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .slider:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 999px; }
+
+/* Songliste, Prüfung und Freigabe (MobileMomente-Fork) */
+.batchrow { margin-top: 10px; display: flex; justify-content: flex-end; }
+#batchDlg { width: min(720px, 94vw); }
+#batchDlg textarea { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: 12px; margin: 10px 0; }
+.batch-help { margin: -6px 0 12px; }
+.batch-preview { max-height: 200px; overflow: auto; margin: 6px 0 12px; }
+.batch-preview ol { margin: 6px 0 0; padding-left: 22px; }
+.batch-preview .err { color: var(--error); }
+.song .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.song .badge { font-size: 11px; letter-spacing: .04em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); cursor: help; }
+.song .badge.ok { border-color: #3f8f63; color: #6fd19a; }
+.song .badge.hinweis { border-color: var(--accent2); color: var(--accent2); }
+.song .badge.fehler, .song .badge.rejected { border-color: var(--error); color: var(--error); }
+.song .badge.approved { border-color: #3f8f63; color: #6fd19a; cursor: default; }
+.song .actions .appr.on { border-color: #3f8f63; color: #6fd19a; }
+.song .actions .rej.on { border-color: var(--error); color: var(--error); }
+#review { margin-left: 4px; }

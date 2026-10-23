@@ -2,6 +2,21 @@
 // data-i18n-ph (Platzhalter) oder data-i18n-aria; dynamische Texte kommen über t("schlüssel").
 const I18N = {
   de: {
+    // MobileMomente-Fork: Songliste, Prüfung, Freigabe, Befehle
+    el: "Griechisch", batch: "Songliste laden", batch_tip: "Viele Songs auf einmal: Liste als JSON oder CSV laden oder einfügen", batch_title: "Songliste",
+    batch_help: "JSON-Liste oder CSV mit Kopfzeile. Felder: title, style, prompt, lyrics, vocal_language, duration, bpm, keyscale, seed, variants. Ohne Lyrics wird ein Song instrumental.",
+    batch_folder: "Ordner", batch_go0: "IN DIE WARTESCHLANGE", batch_go: (n) => `${n} SONGS IN DIE WARTESCHLANGE`, batch_count: (n) => `${n} Songs erkannt`,
+    batch_lines: (n) => `${n} Zeilen`, batch_err_shape: "JSON muss eine Liste sein oder ein Objekt mit „songs“.", batch_err_style: (n) => `Eintrag ${n}: Stil oder Prompt fehlt.`,
+    batch_err_num: (n) => `Eintrag ${n}: Dauer, BPM, Seed oder Versionen ist keine Zahl.`,
+    review_aria: "Nach Freigabe filtern", rv_all: "Alle", rv_open: "Offen", rv_approved: "Freigegeben", rv_rejected: "Gesperrt",
+    approve: "Freigeben (noch einmal: zurücknehmen)", reject: "Sperren (noch einmal: zurücknehmen)", approved: "freigegeben", rejected: "gesperrt",
+    ck_ok: "geprüft", ck_hinweis: "Hinweis", ck_fehler: "Prüfung: Fehler", ck_again: "Klick: noch einmal prüfen",
+    ck_length: (soll, ist) => `Länge ${ist} s statt ${soll} s`, ck_clip: (n) => `${n} übersteuerte Samples (Knacken)`,
+    ck_hole: (bei, d) => `Loch von ${d} s bei ${bei}`, ck_music: (p) => `nur ${p} % hörbare Musik`, ck_empty: "keine Musik zu hören",
+    ck_values: (lufs, peak, m) => `Lautheit ${lufs} LUFS · Spitze ${peak} dBFS · Musik ${m} %`,
+    on_done: "Befehl nach jedem Song", on_approve: "Befehl bei Freigabe", cmd_ph: "leer = aus",
+    on_done_tip: "Startet nach jedem fertigen Song ein Programm. Es bekommt den Song als JSON auf der Standardeingabe (mit „path“ = Datei). Ausgabe: data/befehle.log.",
+    on_approve_tip: "Startet ein Programm, sobald ein Song freigegeben wird (✓), z. B. zur Übergabe an ein Radio. Der Song kommt als JSON auf der Standardeingabe.",
     drop_aria: "Song hochladen und analysieren",
     drop_title: "Song hierher ziehen oder klicken — Stil und Tempo werden übernommen",
     brand_title: "Zur Alphatester-Webseite",
@@ -74,6 +89,21 @@ const I18N = {
     upd_slow: "Neustart dauert ungewöhnlich lang. Bitte Music Generator ON starten.",
   },
   en: {
+    // MobileMomente fork: song list, check, approval, commands
+    el: "Greek", batch: "Load song list", batch_tip: "Many songs at once: load or paste a list as JSON or CSV", batch_title: "Song list",
+    batch_help: "JSON list or CSV with a header row. Fields: title, style, prompt, lyrics, vocal_language, duration, bpm, keyscale, seed, variants. Without lyrics a song becomes instrumental.",
+    batch_folder: "Folder", batch_go0: "ADD TO QUEUE", batch_go: (n) => `ADD ${n} SONGS TO QUEUE`, batch_count: (n) => `${n} songs found`,
+    batch_lines: (n) => `${n} lines`, batch_err_shape: "JSON must be a list or an object with “songs”.", batch_err_style: (n) => `Entry ${n}: style or prompt missing.`,
+    batch_err_num: (n) => `Entry ${n}: duration, BPM, seed or variants is not a number.`,
+    review_aria: "Filter by approval", rv_all: "All", rv_open: "Open", rv_approved: "Approved", rv_rejected: "Rejected",
+    approve: "Approve (again: undo)", reject: "Reject (again: undo)", approved: "approved", rejected: "rejected",
+    ck_ok: "checked", ck_hinweis: "Note", ck_fehler: "Check: error", ck_again: "Click: check again",
+    ck_length: (soll, ist) => `Length ${ist} s instead of ${soll} s`, ck_clip: (n) => `${n} clipped samples (crackle)`,
+    ck_hole: (bei, d) => `Gap of ${d} s at ${bei}`, ck_music: (p) => `only ${p} % audible music`, ck_empty: "no music audible",
+    ck_values: (lufs, peak, m) => `Loudness ${lufs} LUFS · peak ${peak} dBFS · music ${m} %`,
+    on_done: "Command after each song", on_approve: "Command on approval", cmd_ph: "empty = off",
+    on_done_tip: "Runs a program after each finished song. It gets the song as JSON on standard input (with “path” = file). Output: data/befehle.log.",
+    on_approve_tip: "Runs a program as soon as a song is approved (✓), e.g. to hand it to a radio station. The song comes as JSON on standard input.",
     drop_aria: "Upload and analyze a song",
     drop_title: "Drop a song here or click — style and tempo are picked up",
     brand_title: "Go to the Alphatester website",

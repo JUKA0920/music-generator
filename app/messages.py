@@ -283,6 +283,18 @@ MSG = {
         "ja": "このインストールには GitHub にない独自のコミットがあります。自動更新はできません。",
         "zh": "此安装包含 GitHub 上没有的本地提交, 无法自动更新。",
     },
+    "batch_bad_item": {
+        "de": "Songliste, Eintrag {n}: {e}",
+        "en": "Song list, entry {n}: {e}",
+    },
+    "bad_command": {
+        "de": "Befehl ({field}) lässt sich nicht lesen: {e}",
+        "en": "Command ({field}) cannot be parsed: {e}",
+    },
+    "approve_not_done": {
+        "de": "Nur fertige Songs können freigegeben oder gesperrt werden.",
+        "en": "Only finished songs can be approved or rejected.",
+    },
 }
 
 

@@ -56,6 +56,10 @@ DEFAULT_SETTINGS = {
     "highs": "off",                    # Höhen ausgleichen: "on" hebt die Höhen an, die der Klang-Decoder verliert (app/klang.py)
     "export_format": "wav",            # Download/Export: "wav" (verlustfrei, wie erzeugt) oder "mp3" (umgewandelt, kleiner)
     "songs_dir": "",                   # leer = data/songs im Programmordner, sonst absoluter Pfad
+    # Befehle, die die App selbst startet (leer = aus). Sie bekommen den Song als JSON auf stdin
+    # (wie GET /api/songs/{id}, dazu "path" = absoluter Pfad der Datei). Ausgabe: data/befehle.log
+    "on_done": "",                     # nach jedem fertigen Song, z. B. zum Vorlegen per Messenger
+    "on_approve": "",                  # wenn ein Song freigegeben wird, z. B. Übergabe an ein Radio
 }
 
 _lock = threading.Lock()
@@ -113,8 +117,13 @@ def init():
             """
         )
         # Ordner der Bibliothek (nur in der App; die Dateien bleiben, wo sie sind). NULL = unsortiert
-        if "folder_id" not in [r["name"] for r in _con.execute("PRAGMA table_info(songs)")]:
+        spalten = [r["name"] for r in _con.execute("PRAGMA table_info(songs)")]
+        if "folder_id" not in spalten:
             _con.execute("ALTER TABLE songs ADD COLUMN folder_id TEXT")
+        # Automatische Prüfung (app/pruefung.py, JSON) und Freigabe: NULL = offen | approved | rejected
+        for name in ("check_result", "approval", "approval_at"):
+            if name not in spalten:
+                _con.execute(f"ALTER TABLE songs ADD COLUMN {name} TEXT")
         # Nach einem Absturz hängengebliebene Jobs wieder einreihen
         _con.execute("UPDATE songs SET status='queued', message=NULL WHERE status='running'")
         _con.commit()

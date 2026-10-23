@@ -99,7 +99,7 @@
           <select name="vocal_language" aria-label="Sprache der Lyrics" data-i18n-aria="language_aria">
             <option value="en" selected data-i18n="en">Englisch</option><option value="de" data-i18n="de">Deutsch</option><option value="fr" data-i18n="fr">Französisch</option>
             <option value="es" data-i18n="es">Spanisch</option><option value="it" data-i18n="it">Italienisch</option><option value="pt" data-i18n="pt">Portugiesisch</option>
-            <option value="ja" data-i18n="ja">Japanisch</option><option value="ko" data-i18n="ko">Koreanisch</option><option value="zh" data-i18n="zh">Chinesisch</option><option value="ru" data-i18n="ru">Russisch</option>
+            <option value="el" data-i18n="el">Griechisch</option><option value="ja" data-i18n="ja">Japanisch</option><option value="ko" data-i18n="ko">Koreanisch</option><option value="zh" data-i18n="zh">Chinesisch</option><option value="ru" data-i18n="ru">Russisch</option>
           </select></div>
         <textarea name="lyrics" rows="7" placeholder="[verse]&#10;…&#10;&#10;[chorus]&#10;…"></textarea>
         <div class="chips" id="sectionChips"></div>
@@ -157,6 +157,7 @@
             </div>
             <button type="submit" id="genBtn" class="aktion big">2× GENERIEREN</button>
           </div>
+          <div class="batchrow"><button type="button" id="batchBtn" class="sek" title="Viele Songs auf einmal: Liste als JSON oder CSV laden oder einfügen" data-i18n-title="batch_tip" data-i18n="batch">Songliste laden</button></div>
         </div>
       </div>
     </form>
@@ -167,6 +168,10 @@
       <div class="libtitle"><h2 id="libHeading" class="col-title" tabindex="-1" data-i18n="library">Bibliothek</h2><span id="libStats" class="sumhint"></span></div>
       <input id="search" type="search" placeholder="Suchen" data-i18n-ph="search">
       <button type="button" id="onlyFav" class="sek icon" aria-pressed="false" title="Nur Favoriten zeigen" aria-label="Nur Favoriten zeigen" data-i18n-title="only_fav" data-i18n-aria="only_fav">☆</button>
+      <select id="review" class="mini" aria-label="Freigabe" title="Nach Freigabe filtern" data-i18n-aria="review_aria" data-i18n-title="review_aria">
+        <option value="" data-i18n="rv_all">Alle</option><option value="open" data-i18n="rv_open">Offen</option>
+        <option value="approved" data-i18n="rv_approved">Freigegeben</option><option value="rejected" data-i18n="rv_rejected">Gesperrt</option>
+      </select>
     </div>
     <div id="folderBar" class="folderbar"></div>
     <div id="library"></div>
@@ -222,6 +227,12 @@
     <label class="field"><span class="lbl" title="Leer = data/songs im Programmordner. Beim Ändern werden die vorhandenen Songs dorthin verschoben." data-i18n-title="songs_dir_tip" data-i18n="songs_dir">Song-Ordner</span>
       <input name="songs_dir" placeholder="">
     </label>
+    <label class="field"><span class="lbl" title="" data-i18n-title="on_done_tip" data-i18n="on_done">Befehl nach jedem Song</span>
+      <input name="on_done" placeholder="leer = aus" data-i18n-ph="cmd_ph" spellcheck="false" autocomplete="off">
+    </label>
+    <label class="field"><span class="lbl" title="" data-i18n-title="on_approve_tip" data-i18n="on_approve">Befehl bei Freigabe</span>
+      <input name="on_approve" placeholder="leer = aus" data-i18n-ph="cmd_ph" spellcheck="false" autocomplete="off">
+    </label>
     <div class="field"><span class="lbl" data-i18n="layout">Anordnung</span>
       <div class="seg" role="group" aria-label="Anordnung" data-i18n-aria="layout">
         <button type="button" class="sek" data-layout="stack" aria-pressed="true" data-i18n="stacked">Untereinander</button>
@@ -241,6 +252,23 @@
     <div class="submit">
       <button value="cancel" class="sek" data-i18n="cancel">Abbrechen</button>
       <button value="save" id="saveBtn" class="aktion" data-i18n="save">SPEICHERN</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="batchDlg">
+  <form method="dialog" id="batchForm">
+    <h2 class="col-title" data-i18n="batch_title">Songliste</h2>
+    <p class="small batch-help" data-i18n="batch_help">JSON-Liste oder CSV mit Kopfzeile. Felder: title, style, prompt, lyrics, vocal_language, duration, bpm, keyscale, seed, variants. Ohne Lyrics wird ein Song instrumental.</p>
+    <input type="file" id="batchFile" accept=".json,.csv,.tsv,.txt,application/json,text/csv">
+    <textarea id="batchText" rows="8" spellcheck="false" placeholder='[{"title": "…", "style": "…", "lyrics": "[verse]…", "vocal_language": "de", "duration": 180}]'></textarea>
+    <label class="field"><span class="lbl" data-i18n="batch_folder">Ordner</span>
+      <input id="batchFolder" placeholder="optional" data-i18n-ph="title_ph">
+    </label>
+    <div id="batchPreview" class="batch-preview small" role="status" aria-live="polite"></div>
+    <div class="submit">
+      <button value="cancel" class="sek" data-i18n="cancel">Abbrechen</button>
+      <button type="button" id="batchGo" class="aktion" disabled data-i18n="batch_go0">IN DIE WARTESCHLANGE</button>
     </div>
   </form>
 </dialog>

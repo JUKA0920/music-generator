@@ -5,6 +5,7 @@ import logging
 import os
 import random
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -25,6 +26,7 @@ from starlette.background import BackgroundTask
 from . import db, updater
 from .engines import DIT_MODELS, EngineError, make_engine
 from .klang import hoehen_ausgleichen
+from .pruefung import pruefen
 from .messages import tr
 
 log = logging.getLogger("uvicorn.error")
@@ -110,6 +112,9 @@ async def worker():
                     "UPDATE songs SET status='done', message=NULL, file=?, engine=?, result_meta=?, finished_at=? WHERE id=?",
                     (fname, engine.name, json.dumps(meta), now(), sid),
                 )
+                if ext == "wav":
+                    await asyncio.to_thread(_pruefen, sid)
+                _befehl("on_done", sid)
         except (EngineError, Exception) as e:  # noqa: BLE001 – Fehler landen sichtbar im UI
             text = str(e) or e.__class__.__name__
             if "ConnectError" in repr(e) or "connect" in text.lower():
@@ -154,6 +159,43 @@ async def no_cache(request, call_next):
     return resp
 
 
+def _pruefen(sid: str) -> dict | None:
+    """Fertigen Song messen (app/pruefung.py) und das Ergebnis speichern. Fehler der Messung blockieren nichts."""
+    r = db.one("SELECT file, params FROM songs WHERE id=?", (sid,))
+    if not r or not r["file"] or not r["file"].endswith(".wav"):
+        return None
+    try:
+        ergebnis = pruefen((db.songs_dir() / r["file"]).read_bytes(), float(json.loads(r["params"]).get("duration") or 0))
+    except Exception as e:  # noqa: BLE001
+        log.warning("Prüfung von %s fehlgeschlagen: %s", sid, e)
+        return None
+    db.execute("UPDATE songs SET check_result=? WHERE id=?", (json.dumps(ergebnis), sid))
+    return ergebnis
+
+
+def _befehl(key: str, sid: str) -> None:
+    """Befehl aus den Einstellungen (on_done / on_approve) abgekoppelt starten; der Song kommt als JSON auf stdin.
+    Was der Befehl ausgibt, steht in data/befehle.log. Ein fehlender oder kaputter Befehl hält die Warteschlange nicht an."""
+    cmd = str(db.get_settings().get(key) or "").strip()
+    if not cmd:
+        return
+    try:
+        song = song_out(db.one("SELECT * FROM songs WHERE id=?", (sid,)))
+        song["path"] = str(db.songs_dir() / song["file"]) if song.get("file") else None
+        song["event"] = key
+        with open(db.DATA / "befehle.log", "ab") as out:
+            out.write(f"{now()} {key} {sid}: {cmd}\n".encode())
+            out.flush()
+            p = subprocess.Popen(shlex.split(cmd), cwd=db.DATA, stdin=subprocess.PIPE, stdout=out, stderr=out,
+                                 start_new_session=True)
+        p.stdin.write(json.dumps(song, ensure_ascii=False).encode())
+        p.stdin.close()
+    except Exception as e:  # noqa: BLE001
+        log.warning("Befehl %s für %s nicht gestartet: %s", key, sid, e)
+        with open(db.DATA / "befehle.log", "ab") as out:
+            out.write(f"{now()} {key} {sid}: NICHT GESTARTET: {e}\n".encode())
+
+
 # ---------------------------------------------------------------- Modelle
 
 class GenerateRequest(BaseModel):
@@ -179,12 +221,21 @@ class GenerateRequest(BaseModel):
 
 class SongPatch(BaseModel):
     favorite: bool | None = None
+    approval: str | None = None    # "approved" | "rejected" | "" (wieder offen); nur ausgewertet, wenn mitgeschickt
     title: str | None = None
     folder_id: str | None = None   # None/"" = unsortiert (nur ausgewertet, wenn mitgeschickt)
 
 
 class FolderIn(BaseModel):
     name: str
+
+
+class BatchRequest(BaseModel):
+    """Songliste: jeder Eintrag wie ein Formular (title, style, prompt, lyrics, vocal_language, duration, bpm …).
+    Ohne Lyrics wird ein Eintrag instrumental. folder_name legt den Ordner an, falls es ihn noch nicht gibt."""
+    songs: list[dict] = Field(..., min_length=1, max_length=200)
+    folder_id: str | None = None
+    folder_name: str = ""
 
 
 def letters() -> dict:
@@ -210,6 +261,7 @@ def song_out(r: dict, letter: dict | None = None) -> dict:
     r["result_meta"] = json.loads(r["result_meta"]) if r["result_meta"] else None
     r["favorite"] = bool(r["favorite"])
     r["url"] = f"/api/songs/{r['id']}/audio" if r["file"] else None
+    r["check_result"] = json.loads(r["check_result"]) if r.get("check_result") else None
     return r
 
 
@@ -217,6 +269,42 @@ def song_out(r: dict, letter: dict | None = None) -> dict:
 
 @app.post("/api/generate")
 async def generate(req: GenerateRequest, x_lang: str = Header("de")):
+    folder = req.folder_id if req.folder_id and db.one("SELECT id FROM folders WHERE id=?", (req.folder_id,)) else None
+    group, ids = _einreihen(req, folder, x_lang)
+    _wakeup.set()
+    return {"group_id": group, "ids": ids}
+
+
+@app.post("/api/batch")
+async def batch(req: BatchRequest, x_lang: str = Header("de")):
+    """Ganze Songliste auf einmal in die Warteschlange (Reihenfolge wie in der Liste)."""
+    folder = req.folder_id if req.folder_id and db.one("SELECT id FROM folders WHERE id=?", (req.folder_id,)) else None
+    name = req.folder_name.strip()[:60]
+    if name and not folder:
+        f = db.one("SELECT id FROM folders WHERE name=? COLLATE NOCASE", (name,))
+        folder = f["id"] if f else uuid.uuid4().hex[:12]
+        if not f:
+            db.execute("INSERT INTO folders(id, name, created_at) VALUES(?,?,?)", (folder, name, now()))
+    reqs = []
+    for i, item in enumerate(req.songs, 1):
+        item = {k: v for k, v in item.items() if v not in (None, "")}
+        item.setdefault("instrumental", not str(item.get("lyrics", "")).strip())
+        item.pop("group_id", None)
+        item.pop("folder_id", None)
+        try:
+            reqs.append(GenerateRequest(**item))
+        except Exception as e:  # noqa: BLE001
+            fehler = getattr(e, "errors", lambda: [])()
+            text = "; ".join(f"{'.'.join(map(str, f.get('loc', ())))}: {f.get('msg', '')}" for f in fehler) or str(e)
+            raise HTTPException(422, tr(x_lang, "batch_bad_item", n=i, e=text)) from e
+    ids = []
+    for r in reqs:
+        ids += _einreihen(r, folder, x_lang)[1]
+    _wakeup.set()
+    return {"folder_id": folder, "ids": ids}
+
+
+def _einreihen(req: GenerateRequest, folder: str | None, x_lang: str) -> tuple[str, list[str]]:
     group = req.group_id or uuid.uuid4().hex[:12]
     lyrics = "[Instrumental]" if req.instrumental else req.lyrics.strip()
     parts = [p.strip().strip(",") for p in (req.style, req.prompt) if p.strip()]
@@ -227,7 +315,6 @@ async def generate(req: GenerateRequest, x_lang: str = Header("de")):
     base["caption"] = caption
     base["use_cot_caption"] = not req.keep_caption
     base["lyrics"] = lyrics
-    folder = req.folder_id if req.folder_id and db.one("SELECT id FROM folders WHERE id=?", (req.folder_id,)) else None
     ids = []
     for i in range(req.variants):
         # Erste Variante nimmt den festen Seed, weitere zählen hoch -> alles reproduzierbar
@@ -240,12 +327,11 @@ async def generate(req: GenerateRequest, x_lang: str = Header("de")):
             (sid, group, now(), "queued", req.title.strip() or None, caption, lyrics, seed, json.dumps(params), folder),
         )
         ids.append(sid)
-    _wakeup.set()
-    return {"group_id": group, "ids": ids}
+    return group, ids
 
 
 @app.get("/api/songs")
-def list_songs(q: str = "", favorites: bool = False, group: str = "", folder: str = ""):
+def list_songs(q: str = "", favorites: bool = False, group: str = "", folder: str = "", review: str = ""):
     sql, args = "SELECT * FROM songs WHERE 1=1", []
     if q:
         sql += " AND (caption LIKE ? OR lyrics LIKE ? OR title LIKE ?)"
@@ -255,6 +341,11 @@ def list_songs(q: str = "", favorites: bool = False, group: str = "", folder: st
     if group:
         sql += " AND group_id=?"
         args.append(group)
+    if review == "open":
+        sql += " AND status='done' AND approval IS NULL"
+    elif review in ("approved", "rejected"):
+        sql += " AND approval=?"
+        args.append(review)
     fw, fa = folder_where(folder)
     sql += fw + " ORDER BY created_at DESC, rowid DESC LIMIT 500"
     lt = letters()
@@ -270,13 +361,33 @@ def get_song(sid: str):
 
 
 @app.patch("/api/songs/{sid}")
-def patch_song(sid: str, p: SongPatch):
+def patch_song(sid: str, p: SongPatch, x_lang: str = Header("de")):
     if p.favorite is not None:
         db.execute("UPDATE songs SET favorite=? WHERE id=?", (int(p.favorite), sid))
     if p.title is not None:
         db.execute("UPDATE songs SET title=? WHERE id=?", (p.title.strip() or None, sid))
     if "folder_id" in p.model_fields_set:
         db.execute("UPDATE songs SET folder_id=? WHERE id=?", (p.folder_id or None, sid))
+    if "approval" in p.model_fields_set:
+        neu = p.approval if p.approval in ("approved", "rejected") else None
+        alt = db.one("SELECT approval, status FROM songs WHERE id=?", (sid,))
+        if not alt:
+            raise HTTPException(404)
+        if neu and alt["status"] != "done":
+            raise HTTPException(409, tr(x_lang, "approve_not_done"))
+        if neu != alt["approval"]:
+            db.execute("UPDATE songs SET approval=?, approval_at=? WHERE id=?", (neu, now() if neu else None, sid))
+            if neu == "approved":
+                _befehl("on_approve", sid)   # nur beim Wechsel: zweimal Freigeben übergibt nicht zweimal
+    return get_song(sid)
+
+
+@app.post("/api/songs/{sid}/check")
+async def check_song(sid: str):
+    """Prüfung erneut laufen lassen (z. B. für Songs aus der Zeit vor der Prüfung)."""
+    if not db.one("SELECT id FROM songs WHERE id=? AND status='done'", (sid,)):
+        raise HTTPException(404)
+    await asyncio.to_thread(_pruefen, sid)
     return get_song(sid)
 
 
@@ -462,6 +573,13 @@ def put_settings(values: dict, x_lang: str = Header("de")):
             raise HTTPException(400, tr(x_lang, "xl_missing"))
     if "highs" in values:
         values["highs"] = "on" if values["highs"] == "on" else "off"
+    for k in ("on_done", "on_approve"):
+        if k in values:
+            values[k] = str(values[k] or "").strip()
+            try:
+                shlex.split(values[k])
+            except ValueError as e:
+                raise HTTPException(422, tr(x_lang, "bad_command", field=k, e=e)) from e
     if "export_format" in values:
         values["export_format"] = "mp3" if values["export_format"] == "mp3" else "wav"
         if values["export_format"] == "mp3" and not _mp3_tool():

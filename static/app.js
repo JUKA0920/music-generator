@@ -35,6 +35,7 @@ const SECTIONS = ["[intro]", "[verse]", "[pre-chorus]", "[chorus]", "[bridge]", 
 let songs = [];
 let currentId = null;
 let onlyFav = false;       // Favoriten-Filter der Bibliothek
+let review = "";           // Freigabe-Filter: "" alle | open | approved | rejected
 const openLyrics = new Set();   // Songs, deren generierte Lyrics gerade aufgeklappt sind
 let exportFmt = "wav";   // Download-Format laut Einstellung (nur für die Beschriftung des Download-Knopfs)
 let folders = { folders: [], all: 0, none: 0 };
@@ -528,7 +529,7 @@ async function refresh() {
     folders = await api("/api/folders");
     if (curFolder && curFolder !== "none" && !folders.folders.some((f) => f.id === curFolder)) setFolder("", false);
     if (!dragging) renderFolders();
-    const q = new URLSearchParams({ q: $("#search").value, favorites: onlyFav, folder: curFolder });
+    const q = new URLSearchParams({ q: $("#search").value, favorites: onlyFav, folder: curFolder, review });
     songs = await api("/api/songs?" + q);
     announceChanges(songs);
     if (!editingId && !dragging) render();   // während des Umbenennens nicht neu zeichnen, sonst verliert das Feld den Fokus
@@ -596,9 +597,13 @@ function render() {
     if (s.status === "error") state = `<div class="s err" title="${esc(s.message)}">${t("error")} · ${esc(shortErr(s.message))}</div>`;
     if (s.status === "done" && !played.has(s.id)) { const tm = genTime(s); if (tm) state = `<div class="s took">${t("created_in")} ${tm}</div>`; }
     // Vom Modell geschriebener Text (nur bei Songs mit Gesang)
+    const badges = s.status === "done" ? [checkBadge(s.check_result),
+      s.approval && `<span class="badge ${s.approval}">${t(s.approval === "approved" ? "approved" : "rejected")}</span>`].filter(Boolean).join("") : "";
     const lyr = s.status === "done" && s.lyrics !== "[Instrumental]" && /[^\s\[\]]/.test((m.lyrics || "").replace(/\[[^\]]*\]/g, "")) ? m.lyrics.trim() : "";
     const actions = [
       s.status === "done" && `<button class="sek icon ${s.favorite ? "on" : ""}" data-a="fav" title="${t("fav")}">${s.favorite ? "★" : "☆"}</button>`,
+      s.status === "done" && `<button class="sek icon appr ${s.approval === "approved" ? "on" : ""}" data-a="approve" aria-pressed="${s.approval === "approved"}" title="${t("approve")}">✓</button>`,
+      s.status === "done" && `<button class="sek icon rej ${s.approval === "rejected" ? "on" : ""}" data-a="reject" aria-pressed="${s.approval === "rejected"}" title="${t("reject")}">⊘</button>`,
       s.status === "done" && `<a class="download icon fmt" href="${s.url}?download=1" title="${t("download")}">${exportFmt === "mp3" || s.file.endsWith(".mp3") ? "MP3" : "WAV"}</a>`,
       lyr && `<button class="sek icon txt ${openLyrics.has(s.id) ? "on" : ""}" data-a="lyrics" title="${t("show_lyrics")}">TXT</button>`,
       folders.folders.length > 0 && `<button class="sek icon" data-a="move" title="${t("move")}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>`,
@@ -614,7 +619,7 @@ function render() {
       <div style="min-width:0">${s.id === editingId
         ? `<input class="t-edit" data-id="${s.id}" value="${esc(s.title || "")}" placeholder="${esc(s.caption.split(",").slice(0, 3).join(","))}">`
         : `<div class="t" data-a="rename" role="heading" aria-level="3" title="${t("rename")}">${esc(title)}</div>`
-      }<div class="m" title="${t("meta_tip")}">${esc(meta)}</div>${state}</div>
+      }<div class="m" title="${t("meta_tip")}">${esc(meta)}</div>${state}${badges ? `<div class="badges">${badges}</div>` : ""}</div>
       <div class="actions">${actions}</div>${lyr && openLyrics.has(s.id)
         ? `<div class="lyr-wrap"><pre class="lyr">${esc(lyr)}</pre><a class="download mini lyr-dl" download="${esc((title || s.id).replace(/[\\/:*?"<>|]+/g, "_"))}.txt" href="data:text/plain;charset=utf-8,${encodeURIComponent(lyr)}" title="${t("lyrics_dl")}">TXT ↓</a></div>`
         : ""}</div>`;
@@ -622,6 +627,18 @@ function render() {
   // Symbolknöpfe: Tooltip auch als Name für Screenreader
   lib.querySelectorAll("button[title]:not([aria-label]), a[title]:not([aria-label])")
     .forEach((el) => el.setAttribute("aria-label", el.title));
+}
+// Automatische Prüfung (app/pruefung.py): ein Abzeichen, die Befunde im Tooltip
+function checkText(b) {
+  const f = { length: () => t("ck_length", b.soll, b.ist), clip: () => t("ck_clip", b.anzahl), hole: () => t("ck_hole", fmt(b.bei), b.dauer),
+              music: () => t("ck_music", b.anteil), empty: () => t("ck_empty") }[b.code];
+  return f ? f() : b.code;
+}
+function checkBadge(c) {
+  if (!c) return "";
+  const w = c.werte || {};
+  const lines = [...(c.befunde || []).map(checkText), t("ck_values", w.lufs ?? "–", w.spitze_db ?? "–", w.musik ?? "–")];
+  return `<span class="badge ${c.urteil}" data-a="recheck" role="button" tabindex="0" title="${esc(lines.join("\n") + "\n\n" + t("ck_again"))}">${t("ck_" + c.urteil)}</span>`;
 }
 function shortErr(msg = "") {
   if (/nicht erreichbar/i.test(msg)) return t("err_offline");
@@ -638,6 +655,11 @@ $("#library").addEventListener("click", async (e) => {
   if (a === "play") return play(s);
   if (a === "rename") { editingId = id; render(); const inp = $(`.t-edit[data-id="${id}"]`); inp?.focus(); inp?.select(); return; }
   if (a === "fav") await api(`/api/songs/${id}`, { method: "PATCH", body: JSON.stringify({ favorite: !s.favorite }) });
+  if (a === "approve" || a === "reject") {
+    const want = a === "approve" ? "approved" : "rejected";
+    await api(`/api/songs/${id}`, { method: "PATCH", body: JSON.stringify({ approval: s.approval === want ? "" : want }) }).catch((err) => alert(err.message));
+  }
+  if (a === "recheck") await api(`/api/songs/${id}/check`, { method: "POST" }).catch((err) => alert(err.message));
   if (a === "reuse") return fillForm(s);
   if (a === "move") return moveMenu(btn, id);
   if (a === "lyrics") { openLyrics.has(id) ? openLyrics.delete(id) : openLyrics.add(id); return render(); }
@@ -776,6 +798,7 @@ $("#library").addEventListener("keydown", (e) => {
   if (e.key === "Escape") { e.preventDefault(); editingId = null; render(); }
 });
 $("#search").addEventListener("input", () => { clearTimeout(refresh.s); refresh.s = setTimeout(refresh, 250); });
+$("#review").addEventListener("change", (e) => { review = e.currentTarget.value; refresh(); });
 $("#onlyFav").addEventListener("click", (e) => {
   onlyFav = !onlyFav;
   e.currentTarget.setAttribute("aria-pressed", onlyFav);
@@ -861,7 +884,7 @@ async function checkHealth() {
 const dlg = $("#settingsDlg"), sf = $("#settingsForm");
 $("#btnSettings").onclick = async () => {
   const s = await api("/api/settings");
-  for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit", "highs", "lm_device", "export_format"]) sf[k].value = s[k];
+  for (const k of ["server_url", "lm_url", "timeout_minutes", "songs_dir", "dit", "highs", "lm_device", "export_format", "on_done", "on_approve"]) sf[k].value = s[k] ?? "";
   sf.export_format.querySelector('option[value="mp3"]').disabled = !s.mp3_available;   // MP3 nur, wenn der Wandler der Engine da ist
   $("#expHint").hidden = s.mp3_available;
   sf.dit.querySelector('option[value="xl"]').disabled = !s.dit_xl_available;   // XL nur wählbar, wenn die Datei da ist
@@ -871,7 +894,8 @@ $("#btnSettings").onclick = async () => {
 };
 const saveSettings = () => api("/api/settings", { method: "PUT", body: JSON.stringify({
   server_url: sf.server_url.value.trim(), lm_url: sf.lm_url.value.trim(), timeout_minutes: Number(sf.timeout_minutes.value) || 30,
-  songs_dir: sf.songs_dir.value.trim(), dit: sf.dit.value, highs: sf.highs.value, lm_device: sf.lm_device.value, export_format: sf.export_format.value }) }).catch((err) => { alert(err.message); $("#btnSettings").click(); });
+  songs_dir: sf.songs_dir.value.trim(), dit: sf.dit.value, highs: sf.highs.value, lm_device: sf.lm_device.value, export_format: sf.export_format.value,
+  on_done: sf.on_done.value.trim(), on_approve: sf.on_approve.value.trim() }) }).catch((err) => { alert(err.message); $("#btnSettings").click(); });
 // Anordnung: untereinander oder Generator links / Bibliothek rechts
 function setLayout(l) {
   document.querySelector(".wrap").classList.toggle("side", l === "side");
@@ -951,3 +975,82 @@ checkHealth();
 setInterval(checkHealth, 15000);
 loadExportFmt().then(() => render());
 refresh();
+
+// ---------------------------------------------------------------- Songliste (viele Songs auf einmal)
+// JSON: Liste von Objekten oder {"songs": [...]}; CSV/TSV mit Kopfzeile (Trenner , ; oder Tab, Felder in "…").
+// Deutsche Feldnamen gehen auch (titel, stil, text, sprache, dauer, tonart, versionen).
+const BATCH_KEYS = { title: "title", titel: "title", style: "style", stil: "style", caption: "style", prompt: "prompt", idee: "prompt",
+  lyrics: "lyrics", text: "lyrics", songtext: "lyrics", vocal_language: "vocal_language", language: "vocal_language", sprache: "vocal_language",
+  duration: "duration", dauer: "duration", "länge": "duration", laenge: "duration", bpm: "bpm", keyscale: "keyscale", key: "keyscale", tonart: "keyscale",
+  timesignature: "timesignature", takt: "timesignature", seed: "seed", variants: "variants", versionen: "variants", instrumental: "instrumental" };
+const BATCH_NUM = new Set(["duration", "bpm", "seed", "variants"]);
+function csvRows(text) {
+  const first = text.split(/\r?\n/, 1)[0];
+  const sep = [";", "\t", ","].map((c) => [c, first.split(c).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = [[]]; let cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; continue; }
+    if (c === '"') q = true;
+    else if (c === sep) { rows.at(-1).push(cell); cell = ""; }
+    else if (c === "\n") { rows.at(-1).push(cell.replace(/\r$/, "")); cell = ""; rows.push([]); }
+    else cell += c;
+  }
+  rows.at(-1).push(cell);
+  const head = rows.shift().map((h) => h.trim().toLowerCase());
+  return rows.filter((r) => r.some((c) => c.trim())).map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ""])));
+}
+function parseBatch(text) {
+  text = text.trim();
+  if (!text) return [];
+  let raw;
+  if (/^[\[{]/.test(text)) { raw = JSON.parse(text); if (!Array.isArray(raw)) raw = raw.songs; if (!Array.isArray(raw)) throw new Error(t("batch_err_shape")); }
+  else raw = csvRows(text);
+  return raw.map((o) => {
+    const song = {};
+    for (const [k, v] of Object.entries(o || {})) {
+      const key = BATCH_KEYS[String(k).trim().toLowerCase()];
+      if (!key || v === null || v === "") continue;
+      song[key] = BATCH_NUM.has(key) ? Number(v) : key === "instrumental" ? v === true || /^(1|true|ja|yes)$/i.test(String(v)) : String(v);
+    }
+    if (song.keyscale === "Auto") delete song.keyscale;
+    return song;
+  });
+}
+const batchDlg = $("#batchDlg");
+let batchSongs = [];
+function batchPreview() {
+  const box = $("#batchPreview"), go = $("#batchGo");
+  try {
+    batchSongs = parseBatch($("#batchText").value);
+    const bad = batchSongs.findIndex((x) => !x.style && !x.prompt);
+    if (bad >= 0) throw new Error(t("batch_err_style", bad + 1));
+    const nbad = batchSongs.findIndex((x) => [...BATCH_NUM].some((k) => k in x && !Number.isFinite(x[k])));
+    if (nbad >= 0) throw new Error(t("batch_err_num", nbad + 1));
+    box.innerHTML = batchSongs.length ? `<b>${t("batch_count", batchSongs.length)}</b><ol>${batchSongs.map((x) =>
+      `<li>${esc(x.title || x.style || x.prompt)} · ${esc(x.vocal_language || (x.lyrics ? "?" : "instr."))}${x.duration ? " · " + fmt(x.duration) : ""}${x.lyrics ? " · " + t("batch_lines", x.lyrics.split("\n").filter((l) => l.trim() && !/^\[.*\]$/.test(l.trim())).length) : ""}</li>`).join("")}</ol>` : "";
+    go.disabled = !batchSongs.length;
+  } catch (err) {
+    box.innerHTML = `<span class="err">${esc(err.message)}</span>`; go.disabled = true; batchSongs = [];
+  }
+  go.textContent = batchSongs.length ? t("batch_go", batchSongs.length) : t("batch_go0");
+}
+$("#batchBtn").addEventListener("click", () => { batchPreview(); batchDlg.showModal(); });
+$("#batchText").addEventListener("input", batchPreview);
+$("#batchFile").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  $("#batchText").value = await f.text();
+  if (!$("#batchFolder").value) $("#batchFolder").value = f.name.replace(/\.[^.]+$/, "");
+  batchPreview();
+});
+$("#batchGo").addEventListener("click", async () => {
+  const go = $("#batchGo"); go.disabled = true;
+  try {
+    const r = await api("/api/batch", { method: "POST", body: JSON.stringify({ songs: batchSongs, folder_name: $("#batchFolder").value.trim(),
+      folder_id: $("#batchFolder").value.trim() ? null : (curFolder && curFolder !== "none" ? curFolder : null) }) });
+    batchDlg.close();
+    announce(t("an_queued", r.ids.length));
+    $("#batchText").value = ""; $("#batchFile").value = ""; $("#batchFolder").value = "";
+    if (r.folder_id) setFolder(r.folder_id); else refresh();
+  } catch (err) { $("#batchPreview").innerHTML = `<span class="err">${esc(err.message)}</span>`; go.disabled = false; }
+});
