@@ -12,8 +12,10 @@ from . import db
 from .messages import tr
 
 ROOT = Path(__file__).resolve().parent.parent
-BRANCH = "main"
-REPO_URL = "https://github.com/rabbitfiremediacreation/music-generator.git"
+# Eine eigene Weiterentwicklung (Fork) trägt in data/engine.conf UPDATE_REPO=… und UPDATE_BRANCH=… ein;
+# dann holt „Jetzt aktualisieren“ von dort statt vom Original.
+BRANCH = db._engine_conf().get("UPDATE_BRANCH") or "main"
+REPO_URL = db._engine_conf().get("UPDATE_REPO") or "https://github.com/rabbitfiremediacreation/music-generator.git"
 router = APIRouter(prefix="/api/update")
 
 
