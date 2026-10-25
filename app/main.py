@@ -338,10 +338,14 @@ def _export_file(r: dict, lang: str = "de") -> Path:
     try:
         res = subprocess.run([str(tool), "-i", str(src), "-o", str(part), "-b", str(MP3_KBPS)],
                              capture_output=True, timeout=180)
-    except (OSError, subprocess.TimeoutExpired):
+    except (OSError, subprocess.TimeoutExpired) as e:
+        log.warning("MP3-Wandler %s ließ sich nicht ausführen: %r", tool, e)   # z. B. Virenscanner oder fehlende Rechte
         part.unlink(missing_ok=True)
         raise HTTPException(500, tr(lang, "mp3_failed"))
     if res.returncode or not part.is_file() or part.stat().st_size < 1000:
+        log.warning("MP3-Wandler %s: Rückgabewert %s, Ausgabe %s Byte, Quelle %s, Meldung: %s", tool, res.returncode,
+                    part.stat().st_size if part.is_file() else "keine", src,
+                    (res.stderr or b"").decode("utf-8", "replace").strip()[-400:])
         part.unlink(missing_ok=True)
         raise HTTPException(500, tr(lang, "mp3_failed"))
     part.replace(out)
