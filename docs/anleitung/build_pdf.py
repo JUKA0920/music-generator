@@ -639,10 +639,31 @@ def page_trouble(c):
     footer(c, 9)
 
 
+
+def page_linux(c):
+    y = header(c, T("pl_01"), T("pl_02"))
+    y = h2(c, T("pl_03"), y)
+    y = para(c, T("pl_04"), M, y, W - 2 * M)
+    y -= 10
+    y = code(c, T("pl_05"), M, y, W - 2 * M)
+    y -= 8
+    y = para(c, T("pl_06"), M, y, W - 2 * M, small)
+    y -= 16
+    y = h2(c, T("pl_07"), y)
+    y = para(c, T("pl_08"), M, y, W - 2 * M)
+    y -= 10
+    y = code(c, T("pl_09"), M, y, W - 2 * M)
+    y -= 10
+    y = para(c, T("pl_10"), M, y, W - 2 * M)
+    y -= 12
+    y = note(c, T("pl_11"), y, BLUE, "Linux")
+    footer(c, 10)
+
+
 c = canvas.Canvas(str(OUT), pagesize=A4)
 c.setTitle(T("p8_31"))
 c.setAuthor("Alphatester")
-for fn in (page_cover, page_overview, page_steps, page_flow, page_windows, page_app, page_prompts, page_help, page_trouble):
+for fn in (page_cover, page_overview, page_steps, page_flow, page_windows, page_app, page_prompts, page_help, page_trouble, page_linux):
     fn(c)
     c.showPage()
 c.save()
