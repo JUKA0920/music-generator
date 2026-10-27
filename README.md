@@ -4,6 +4,16 @@ Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud.
 Web-Oberfläche für [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) über
 [acestep.cpp](https://github.com/ServeurpersoCom/acestep.cpp).
 
+## Neu: die Desktop-App (ohne Terminal)
+
+Den Music Generator gibt es jetzt auch als **Desktop-App** für Mac, Windows und Linux: herunterladen, öffnen, ein Assistent lädt die Modelle. Kein Git, kein Python, kein Installationsbefehl. Entwickelt gemeinsam mit **Frank Hildebrandt** ([@frankhildebrandt](https://github.com/frankhildebrandt)), dem dafür ausdrücklich gedankt sei.
+
+- **Download:** [github.com/rabbitfiremediacreation/music-generator-desktop/releases](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases) (aktuell Version 0.1.1, eine Test-Version; macOS und Windows zeigen beim ersten Start eine Sicherheitsabfrage, das steht in der Anleitung)
+- **Anleitung:** [Desktop-App-Anleitung.pdf](Desktop-App-Anleitung.pdf) · [English](Desktop-App-Guide-EN.pdf) · [中文](Desktop-App-Guide-ZH.pdf)
+- **Wer die Web-App schon nutzt:** Sie bleibt weiter bestehen (auch für Linux mit CUDA oder ROCm und ältere Macs). Die Desktop-App kann deine Bibliothek übernehmen; beide laufen unabhängig voneinander. Neue Funktionen entstehen künftig in der Desktop-App.
+
+Die Web-App mit Installer ist unten beschrieben.
+
 - **Mac** (Apple Silicon, Metal): diese Seite. Ausführliche Anleitung mit Bildern: **[Installationsanleitung.pdf](Installationsanleitung.pdf)**
 - **Windows** (NVIDIA, CUDA/Vulkan): **[README-WINDOWS.md](README-WINDOWS.md)**
 - Anleitung in anderen Sprachen: **[Installation-Guide-EN.pdf](Installation-Guide-EN.pdf)** (English), **[Installation-Guide-ZH.pdf](Installation-Guide-ZH.pdf)** (中文)

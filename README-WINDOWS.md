@@ -1,5 +1,7 @@
 # Music Generator für Windows
 
+> **Neu:** Für Windows gibt es jetzt auch eine **Desktop-App** ohne PowerShell und Git: ZIP laden, entpacken, öffnen. Download und Anleitung: [Desktop-App-Anleitung.pdf](Desktop-App-Anleitung.pdf) und [github.com/rabbitfiremediacreation/music-generator-desktop/releases](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases). Diese Seite beschreibt die Web-App mit Installer, die weiter gepflegt wird.
+
 Gleiche App wie auf dem Mac, Modellserver läuft über CUDA auf der NVIDIA-Grafikkarte.
 Der Installer lädt die fertigen Windows-Programmdateien von acestep.cpp in einer festen, geprüften Version (kein Compiler nötig).
 
