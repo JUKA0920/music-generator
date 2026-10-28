@@ -123,7 +123,11 @@ def code(c, text, x, y, w):
     h = 16 + 14 * len(lines)
     c.setFillColor(BG)
     c.roundRect(x, y - h, w, h, 6, stroke=0, fill=1)
-    c.setFont("Mono", 9.5)
+    fs = 9.5
+    wmax = max(pdfmetrics.stringWidth(l, "Mono", fs) for l in lines)
+    if wmax > w - 24:
+        fs = fs * (w - 24) / wmax     # lange Zeilen verkleinern, damit sie in der Box bleiben
+    c.setFont("Mono", fs)
     for i, line in enumerate(lines):
         c.setFillColor(GOLD if "<" in line else LOGO_TXT)
         c.drawString(x + 12, y - 19 - 14 * i, line)
@@ -513,11 +517,12 @@ def page_app(c):
     lx = ix + iw_pt + 18
     lw = W - M - lx
     ly = y
-    st = ParagraphStyle("lg", parent=small, fontSize=8.4, leading=10.8, textColor=INK)
+    st = ParagraphStyle("lg", parent=small, fontSize=8.1, leading=10.0, textColor=INK)
     for n, (t, s) in enumerate(legend, 1):
         badge(c, n, lx + 8, ly - 8, 7.5)
-        ly = para(c, f"<b>{t}</b> · {s}", lx + 22, ly - 1, lw - 22, st) - 7.5
-    note(c, T("p6_23"), min(ly - 6, 140), GOLD, T("p6_24"), small)
+        ly = para(c, f"<b>{t}</b> · {s}", lx + 22, ly - 1, lw - 22, st) - 5
+    nh = Paragraph(f"<b>{T('p6_24')}:</b> {T('p6_23')}", small).wrap(W - 2 * M - 26, 1000)[1]
+    note(c, T("p6_23"), max(min(ly - 6, 140), nh + 62), GOLD, T("p6_24"), small)   # Unterkante mind. 44 pt, über der Fußzeile
     footer(c, 6)
 
 
@@ -631,11 +636,12 @@ def page_trouble(c):
     y = table(c, rows, y, [190, W - 2 * M - 190])
     y -= 6
     y = h2(c, T("p8_27"), y)
-    y = para(c, T("p8_28"), M, y, W - 2 * M, small)
-    y -= 6
+    tiny = ParagraphStyle("tiny", parent=small, fontSize=8.6, leading=11.8)
+    y = para(c, T("p8_28"), M, y, W - 2 * M, tiny)
+    y -= 2
 
     y = h2(c, T("p8_29"), y)
-    para(c, T("p8_30"), M, y, W - 2 * M, small)
+    para(c, T("p8_30"), M, y, W - 2 * M, tiny)
     footer(c, 9)
 
 

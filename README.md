@@ -1,38 +1,56 @@
 # Music Generator
 
-Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud.
-Web-Oberfläche für [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) über
+Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud. Web-Oberfläche für [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) über
 [acestep.cpp](https://github.com/ServeurpersoCom/acestep.cpp).
+
+<p align="center"><img src="docs/bilder/app.png" width="460" alt="Oberfläche des Music Generators: Titel, Prompt, Stil, Länge, BPM, Lyrics und Generieren"></p>
+
+## Los geht's
+
+| | **Desktop-App** (neu, ohne Terminal) | **Web-App** mit Installer |
+|---|---|---|
+| Systeme | Mac, Windows, Linux | Mac (Apple Silicon), Windows (NVIDIA), Linux |
+| Start | herunterladen, öffnen, ein Assistent lädt die Modelle | Installer im Terminal bzw. PowerShell, Anleitung unten |
+| Download | [**Releases der Desktop-App**](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases) (Version 0.1.2, Test-Version) | diese Seite, Abschnitt [Installation](#installation) |
+| Anleitung (PDF) | [Deutsch](Desktop-App-Anleitung.pdf) · [English](Desktop-App-Guide-EN.pdf) · [中文](Desktop-App-Guide-ZH.pdf) | [Deutsch](Installationsanleitung.pdf) · [English](Installation-Guide-EN.pdf) · [中文](Installation-Guide-ZH.pdf) |
+| Videos | [Desktop-App](https://youtu.be/utlWx3HEIAg) | [Windows](https://youtu.be/se2g3tRFzrg) · [Mac](https://youtu.be/FxNSXj_wMBQ) |
+
+Die Web-App bleibt bestehen (auch für Linux mit CUDA oder ROCm und ältere Macs). Neue Funktionen entstehen künftig in der Desktop-App. Windows-Web-App: [README-WINDOWS.md](README-WINDOWS.md).
 
 ## Neu: die Desktop-App (ohne Terminal)
 
-Den Music Generator gibt es jetzt auch als **Desktop-App** für Mac, Windows und Linux: herunterladen, öffnen, ein Assistent lädt die Modelle. Kein Git, kein Python, kein Installationsbefehl. Entwickelt gemeinsam mit **Frank Hildebrandt** ([@frankhildebrandt](https://github.com/frankhildebrandt)), dem dafür ausdrücklich gedankt sei.
+Kein Git, kein Python, kein Installationsbefehl. Entwickelt gemeinsam mit **Frank Hildebrandt** ([@frankhildebrandt](https://github.com/frankhildebrandt)), dem dafür ausdrücklich gedankt sei.
 
-- **Download:** [github.com/rabbitfiremediacreation/music-generator-desktop/releases](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases) (aktuell Version 0.1.2, eine Test-Version; macOS und Windows zeigen beim ersten Start eine Sicherheitsabfrage, das steht in der Anleitung)
 - **Welche Datei?** Auf der Download-Seite den obersten Eintrag öffnen und unten **„Assets“** aufklappen (nicht „Source code“). Windows: [Music-Generator-0.1.2-windows-x64.zip](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases/download/v0.1.2/Music-Generator-0.1.2-windows-x64.zip) (entpacken, dann die App darin starten). Mac mit Apple Silicon (M1 bis M4): `…-macos-arm64.dmg`, Mac mit Intel: `…-macos-x64.dmg`. Linux: `…-linux-x64.AppImage`. Die Dateien mit `.sha256` und `original-builds` brauchst du nicht.
+- **Sicherheitsabfrage:** macOS und Windows zeigen beim ersten Start eine Abfrage, weil die App nicht signiert ist. Das steht in der Anleitung.
+- **Wer die Web-App schon nutzt:** Die Desktop-App kann deine Bibliothek übernehmen; beide laufen unabhängig voneinander.
+
+<details>
+<summary><b>Probleme mit Version 0.1.2</b> (Start fehlgeschlagen, schwarzes Fenster)</summary>
+
 - **Startet die App nicht** („Start fehlgeschlagen“, „Der Start konnte nicht abgeschlossen werden“)? Das ist ein bekannter Fehler der Test-Version 0.1.2, an einer Korrektur wird gearbeitet. Erst „Erneut versuchen“, dann die App ganz beenden und neu starten. Hilft das nicht, nutze die Web-App (Installation weiter unten, für Windows [README-WINDOWS.md](README-WINDOWS.md)); sie läuft unabhängig davon.
 - **Das Fenster bleibt schwarz** (kommt unter Windows gelegentlich vor)? Das Fenster **minimieren und wieder öffnen**, dann erscheint die Oberfläche sofort. Auch das ist ein bekannter Fehler der Test-Version.
-- **Anleitung:** [Desktop-App-Anleitung.pdf](Desktop-App-Anleitung.pdf) · [English](Desktop-App-Guide-EN.pdf) · [中文](Desktop-App-Guide-ZH.pdf)
-- **Wer die Web-App schon nutzt:** Sie bleibt weiter bestehen (auch für Linux mit CUDA oder ROCm und ältere Macs). Die Desktop-App kann deine Bibliothek übernehmen; beide laufen unabhängig voneinander. Neue Funktionen entstehen künftig in der Desktop-App.
 
-Die Web-App mit Installer ist unten beschrieben.
+</details>
 
-- **Mac** (Apple Silicon, Metal): diese Seite. Ausführliche Anleitung mit Bildern: **[Installationsanleitung.pdf](Installationsanleitung.pdf)**
-- **Windows** (NVIDIA, CUDA/Vulkan): **[README-WINDOWS.md](README-WINDOWS.md)**
-- Anleitung in anderen Sprachen: **[Installation-Guide-EN.pdf](Installation-Guide-EN.pdf)** (English), **[Installation-Guide-ZH.pdf](Installation-Guide-ZH.pdf)** (中文)
+**Web-App im Überblick:**
+- **Mac** (Apple Silicon, Metal): diese Seite
+- **Windows** (NVIDIA, CUDA/Vulkan): [README-WINDOWS.md](README-WINDOWS.md)
 - **Linux** (Arch Linux / Derivate mit Installer, andere Distributionen von Hand): Abschnitt [Linux](#linux-arch-linux--derivate) unten
-- **Videos zur Installation:** [Windows](https://youtu.be/se2g3tRFzrg) · [Mac](https://youtu.be/FxNSXj_wMBQ)
 
 ## Installation
 
-Voraussetzungen: Mac mit Apple Silicon (M1 oder neuer), mindestens 8 GB Arbeitsspeicher, 7–11 GB frei.
-
-**Intel-Macs** gehen nur eingeschränkt: Der Installer kompiliert den Modellserver selbst (etwa 2 Minuten, braucht die Xcode-Kommandozeilenwerkzeuge), und alles rechnet auf der CPU, weil die Intel-Grafik zu wenig Speicher hat. Gemessen auf einem MacBook Pro mit Core i5 und 8 GB: ein 30-Sekunden-Song brauchte etwa 13 Minuten, ein 10-Sekunden-Song etwa 1,5 Minuten. Längere Songs laufen leicht in die 30-Minuten-Grenze (Zahnrad › Timeout). Der Installer dauert dort rund 45 Minuten.
+Voraussetzungen: Mac mit Apple Silicon (M1 oder neuer), mindestens 8 GB Arbeitsspeicher, 7–11 GB frei. Intel-Macs gehen nur eingeschränkt (alles rechnet auf der CPU, Details unten).
 
 ```bash
 git clone https://github.com/rabbitfiremediacreation/music-generator.git ~/MusicGenerator
 open ~/MusicGenerator/Mac-Install.command
 ```
+
+<details>
+<summary><b>Intel-Macs, was der Installer macht, Optionen, XL-Klangmodell</b></summary>
+
+**Intel-Macs** gehen nur eingeschränkt: Der Installer kompiliert den Modellserver selbst (etwa 2 Minuten, braucht die Xcode-Kommandozeilenwerkzeuge), und alles rechnet auf der CPU, weil die Intel-Grafik zu wenig Speicher hat. Gemessen auf einem MacBook Pro mit Core i5 und 8 GB: ein 30-Sekunden-Song brauchte etwa 13 Minuten, ein 10-Sekunden-Song etwa 1,5 Minuten. Längere Songs laufen leicht in die 30-Minuten-Grenze (Zahnrad › Timeout). Der Installer dauert dort rund 45 Minuten.
 
 Der Installer
 
@@ -52,6 +70,8 @@ Optionen: `--yes` (keine Rückfragen), `--lm 0.6B|1.7B|4B`, `--xl`, `--cpu` (Spr
 Die fertigen Mac-Programmdateien sind aus dem unveränderten Quelltext von acestep.cpp gebaut (Release `engine-macos-arm64-b7ba6d9`, Herkunft und Prüfsummen in `engine/acestep.cpp/build/README.txt` und `SHA256SUMS.txt`). Sie laufen auf M1 bis M4 und neuer, der passende CPU-Code wird beim Start gewählt.
 
 **XL-Klangmodell (optional):** Der Installer fragt, ob zusätzlich das größere Klangmodell ACE-Step 1.5 XL (4 statt 2 Milliarden Parameter, 5,3 GB) geladen werden soll. Laut den Entwicklern klingt es besser, es rechnet etwa doppelt so lange und braucht mehr Speicher (ab 16 GB Arbeitsspeicher bzw. 12 GB Grafikspeicher). Standard bleibt das kleinere Modell; XL wählst du danach unter Zahnrad › Klangmodell. Gemessen auf einem M4 mit 16 GB: ein 30-Sekunden-Song brauchte mit Standard 49 s, mit XL 99 s. Noch wenig getestet, Rückmeldungen willkommen.
+
+</details>
 
 ## Benutzen
 
