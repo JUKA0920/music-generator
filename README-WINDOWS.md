@@ -81,7 +81,7 @@ Der Quellcode von acestep.cpp liegt offen auf [GitHub](https://github.com/Serveu
 ## Wenn etwas nicht geht
 
 - **Modellserver startet nicht, Meldung wegen fehlender DLL:** NVIDIA-Treiber aktualisieren.
-  Das Archiv enthält `ggml-cuda.dll`, aber nicht die CUDA-Bibliothek `cublas64_13.dll` (bei einem früheren Test fehlte genau sie). Fehlen sie auf dem Rechner, lädt die CUDA-Bibliothek nicht und der Modellserver nimmt Vulkan oder CPU; das ist langsamer, aber es geht. Ob CUDA 13 (Toolkit oder Laufzeit) auf einer RTX-Karte nötig ist, ist bei uns noch nicht praktisch geprüft.
+  Das Archiv enthält `ggml-cuda.dll`, aber nicht die CUDA-Bibliothek `cublas64_13.dll` (bei einem früheren Test fehlte genau sie). Fehlt sie auf dem Rechner, lädt `ggml-cuda.dll` nicht und der Modellserver nimmt Vulkan oder CPU; das ist langsamer, aber es geht. Ob CUDA 13 (Toolkit oder Laufzeit) auf einer RTX-Karte nötig ist, ist bei uns noch nicht praktisch geprüft.
 - **Alles sehr langsam:** In `data/ace-server.err.log` nachsehen, welches Backend gewählt wurde
   (`[Load] ... backend: CUDA0` oder `Vulkan0` ist richtig, `CPU` falsch).
 - **`ErrorOutOfDeviceMemory` im Log, Song endet mit Fehler:** Der Grafikspeicher reicht nicht.
