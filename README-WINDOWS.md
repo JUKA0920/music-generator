@@ -35,9 +35,10 @@ Der Installer
    der Grafikspeicher begrenzt zusätzlich: unter 6 GB 0.6B, 6–7 GB 1.7B, ab 8 GB 4B),
 3. installiert was fehlt: `git`, `uv` (ohne Admin-Rechte),
 4. lädt die fertigen acestep.cpp-Programmdateien (ZIP, ca. 130 MB) aus der Veröffentlichung dieses Projekts und prüft die Prüfsumme,
-5. lädt nur die benötigten Modelle (fortsetzbar),
-6. testet, ob das Sprachmodell auf der Grafikkarte richtig rechnet (sonst CPU),
-7. legt die Verknüpfungen **Music Generator ON / OFF** im Programmordner und auf dem Desktop an und startet die App.
+5. lädt bei einer NVIDIA-Karte ab RTX 20xx/GTX 16xx (Compute Capability 7.5) nach Rückfrage die CUDA-Bibliothek cuBLAS direkt von NVIDIA (rund 400 MB, danach etwa 550 MB im Programmordner; fehlt sie, rechnet der Modellserver nur über Vulkan oder CPU). Die Prüfsumme wird kontrolliert. Neu und noch nicht auf einer RTX-Karte getestet,
+6. lädt nur die benötigten Modelle (fortsetzbar),
+7. testet, ob das Sprachmodell auf der Grafikkarte richtig rechnet (sonst CPU),
+8. legt die Verknüpfungen **Music Generator ON / OFF** im Programmordner und auf dem Desktop an und startet die App.
 
 Er kann jederzeit erneut laufen; Erledigtes wird übersprungen.
 Optionen (in der PowerShell): `.\Windows-Install.ps1 -Yes`, `-LM 0.6B|1.7B|4B`, `-Cpu` (Sprachmodell immer auf der CPU rechnen, auch in der App unter Zahnrad wählbar; `-Auto` stellt zurück), `-XL` (zusätzlich das größere XL-Klangmodell, 5,3 GB, ab 12 GB Grafikspeicher; danach unter Zahnrad › Klangmodell wählbar), `-NoStart`,
@@ -81,7 +82,7 @@ Der Quellcode von acestep.cpp liegt offen auf [GitHub](https://github.com/Serveu
 ## Wenn etwas nicht geht
 
 - **Modellserver startet nicht, Meldung wegen fehlender DLL:** NVIDIA-Treiber aktualisieren.
-  Das Archiv enthält `ggml-cuda.dll`, aber nicht die CUDA-Bibliothek `cublas64_13.dll` (bei einem früheren Test fehlte genau sie). Fehlt sie auf dem Rechner, lädt `ggml-cuda.dll` nicht und der Modellserver nimmt Vulkan oder CPU; das ist langsamer, aber es geht. Ob CUDA 13 (Toolkit oder Laufzeit) auf einer RTX-Karte nötig ist, ist bei uns noch nicht praktisch geprüft.
+  Das Archiv enthält `ggml-cuda.dll`, aber nicht die CUDA-Bibliothek `cublas64_13.dll` (bei einem früheren Test fehlte genau sie). Fehlt sie auf dem Rechner, lädt `ggml-cuda.dll` nicht und der Modellserver nimmt Vulkan oder CPU; das ist langsamer, aber es geht. Der Installer lädt sie bei passender NVIDIA-Karte nach Rückfrage selbst von NVIDIA; wer ihn schon vorher benutzt hat, startet `Windows-Install.bat` noch einmal. Ob CUDA 13 (Toolkit oder Laufzeit) auf einer RTX-Karte nötig ist, ist bei uns noch nicht praktisch geprüft.
 - **Alles sehr langsam:** In `data/ace-server.err.log` nachsehen, welches Backend gewählt wurde
   (`[Load] ... backend: CUDA0` oder `Vulkan0` ist richtig, `CPU` falsch).
 - **`ErrorOutOfDeviceMemory` im Log, Song endet mit Fehler:** Der Grafikspeicher reicht nicht.

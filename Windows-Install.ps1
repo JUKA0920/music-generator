@@ -267,6 +267,53 @@ if ($ACE -and (-not $Build) -and (($haveRev -eq $ENGINE_WIN_REV) -or $selfBuilt)
 $ACE = Ace-Server
 if (-not $ACE) { Abbruch "ace-server.exe not found." }
 
+# --- 4b. cuBLAS für CUDA (nur NVIDIA ab Turing, nur mit den fertigen Programmdateien) ---------
+# ggml-cuda.dll braucht cublas64_13.dll (und diese cublasLt64_13.dll). Das Archiv bringt sie nicht mit, ohne sie
+# lädt die CUDA-Bibliothek nicht und der Modellserver nimmt Vulkan oder CPU. Wir laden sie direkt von NVIDIA.
+if (-not $Build -and $NVIDIA -and (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) {
+    $cc = (& nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>$null | Select-Object -First 1)
+    $ccOk = $false
+    if ($cc) { try { $ccOk = ([double]::Parse($cc.Trim(), [Globalization.CultureInfo]::InvariantCulture) -ge 7.5) } catch { } }
+    $cublas = Join-Path $rel "cublas64_13.dll"
+    $cublasLt = Join-Path $rel "cublasLt64_13.dll"
+    if ($ccOk -and (Test-Path $rel) -and -not ((Test-Path $cublas) -and (Test-Path $cublasLt))) {
+        Schritt "CUDA library cuBLAS (from NVIDIA)"
+        Write-Host "  Your graphics card (compute capability $($cc.Trim())) can use CUDA, but cublas64_13.dll is missing."
+        Write-Host "  Without it the model server uses Vulkan or the CPU, which is slower."
+        Write-Host "  Download from NVIDIA: about 400 MB, needs about 550 MB of disk space in the program folder afterwards."
+        if (Ja "  Download cuBLAS now?") {
+            $czip = Join-Path $DATA "libcublas-win64.zip"
+            if (-not (Download $CUBLAS_WIN_URL "$czip.neu")) {
+                Write-Host "  Downloading cuBLAS failed. The app still works on Vulkan or CPU; running Install again resumes."
+            } elseif ((Get-FileHash -Algorithm SHA256 "$czip.neu").Hash.ToLower() -ne $CUBLAS_WIN_SHA256) {
+                Remove-Item -Force "$czip.neu"
+                Write-Host "  Checksum of the cuBLAS download does not match. The file was deleted; the app works on Vulkan or CPU."
+            } else {
+                Write-Host "    checksum ok, unpacking cublas64_13.dll and cublasLt64_13.dll ..."
+                Move-Item -Force "$czip.neu" $czip
+                try {
+                    Add-Type -AssemblyName System.IO.Compression.FileSystem
+                    $za = [System.IO.Compression.ZipFile]::OpenRead($czip)
+                    try {
+                        foreach ($e in $za.Entries) {
+                            if ($e.FullName -match '/bin/x64/(cublas64_13|cublasLt64_13)\.dll$') {
+                                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($e, (Join-Path $rel $e.Name), $true)
+                            }
+                        }
+                    } finally { $za.Dispose() }
+                } catch { Write-Host "  Unpacking cuBLAS failed: $_" }
+                Remove-Item -Force $czip -ErrorAction SilentlyContinue
+                if ((Test-Path $cublas) -and (Test-Path $cublasLt)) {
+                    "CUBLAS=13.1.0.3 SOURCE=$CUBLAS_WIN_URL ZIP_SHA256=$CUBLAS_WIN_SHA256" | Add-Content $verFile
+                    Write-Host "  done. Check in data\ace-server.err.log: '[Load] ... backend: CUDA0' means CUDA is in use."
+                } else {
+                    Write-Host "  cuBLAS files are missing after unpacking; the app works on Vulkan or CPU."
+                }
+            }
+        }
+    }
+}
+
 # --- 5. Modelle -----------------------------------------------------------------
 Schritt "Downloading models"
 New-Item -ItemType Directory -Force -Path $MODELS | Out-Null
