@@ -1,5 +1,7 @@
 # Music Generator für Windows
 
+> **Neu:** Für Windows gibt es jetzt auch eine **Desktop-App** ohne PowerShell und Git: ZIP laden, entpacken, öffnen. Download und Anleitung: [Desktop-App-Anleitung.pdf](Desktop-App-Anleitung.pdf) und [github.com/rabbitfiremediacreation/music-generator-desktop/releases](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases). Diese Seite beschreibt die Web-App mit Installer, die weiter gepflegt wird.
+
 Gleiche App wie auf dem Mac, Modellserver läuft über CUDA auf der NVIDIA-Grafikkarte.
 Der Installer lädt die fertigen Windows-Programmdateien von acestep.cpp in einer festen, geprüften Version (kein Compiler nötig).
 
@@ -12,11 +14,10 @@ Video zur Installation: **[youtu.be/se2g3tRFzrg](https://youtu.be/se2g3tRFzrg)**
 Voraussetzungen: Windows 10/11 (64 Bit), NVIDIA-Grafikkarte mit aktuellem Treiber,
 mindestens 8 GB Arbeitsspeicher, 7–11 GB frei.
 
-Die fertigen Binaries sind mit CUDA 13 gebaut und enthalten nur Code für RTX 30xx und neuer.
-Ältere Karten (GTX 10xx/16xx, RTX 20xx) laufen automatisch über Vulkan, das ist langsamer, aber es geht:
+Die fertigen Binaries sind mit CUDA 13 gebaut. Laut Dateianalyse enthalten sie Code für RTX 20xx/GTX 16xx und neuer; ein Praxistest mit CUDA auf NVIDIA-Karten steht noch aus.
+Karten ohne passenden Code (GTX 10xx, Pascal) laufen automatisch über Vulkan, das ist langsamer, aber es geht:
 auf einer GTX 1060 (6 GB) dauert ein 30-Sekunden-Song etwa 1 Minute, ein 90-Sekunden-Song etwa 2,5 Minuten.
-
-**AMD:** Laut einem Nutzerbericht läuft auch AMD-Grafik über Vulkan, zum Beispiel eine Radeon 780M (Mini-PC mit Ryzen 7 8745HS, 64 GB RAM, im BIOS 8 GB für die Grafik zugeteilt): Installation ohne Fehler, Standard-Klangmodell etwa 3 bis 5 Minuten pro Song, XL etwa 5 bis 8 Minuten. Ein Einzelbericht, die Zeiten hängen stark vom Rechner ab.
+**AMD:** Laut einem Nutzerbericht läuft auch AMD-Grafik über Vulkan, zum Beispiel eine Radeon 780M (Mini-PC mit Ryzen 7 8745HS, 64 GB RAM, im BIOS 8 GB für die Grafik zugeteilt): Installation ohne Fehler, Standard-Klangmodell etwa 3 bis 5 Minuten pro Song, XL etwa 5 bis 8 Minuten. Ein zweiter Bericht nennt für eine Radeon 890M (Geekom A9 Max) ebenfalls 3 bis 5 Minuten mit dem Standard-Klangmodell. Einzelberichte, die Zeiten hängen stark vom Rechner ab.
 
 1. Falls `git` fehlt: PowerShell öffnen und `winget install Git.Git` ausführen (oder der Installer macht es).
 2. In der PowerShell:
@@ -34,9 +35,10 @@ Der Installer
    der Grafikspeicher begrenzt zusätzlich: unter 6 GB 0.6B, 6–7 GB 1.7B, ab 8 GB 4B),
 3. installiert was fehlt: `git`, `uv` (ohne Admin-Rechte),
 4. lädt die fertigen acestep.cpp-Programmdateien (ZIP, ca. 130 MB) aus der Veröffentlichung dieses Projekts und prüft die Prüfsumme,
-5. lädt nur die benötigten Modelle (fortsetzbar),
-6. testet, ob das Sprachmodell auf der Grafikkarte richtig rechnet (sonst CPU),
-7. legt die Verknüpfungen **Music Generator ON / OFF** im Programmordner und auf dem Desktop an und startet die App.
+5. lädt bei einer NVIDIA-Karte ab RTX 20xx/GTX 16xx (Compute Capability 7.5) nach Rückfrage die CUDA-Bibliothek cuBLAS direkt von NVIDIA (rund 400 MB, danach etwa 550 MB im Programmordner; fehlt sie, rechnet der Modellserver nur über Vulkan oder CPU). Die Prüfsumme wird kontrolliert. Neu und noch nicht auf einer RTX-Karte getestet,
+6. lädt nur die benötigten Modelle (fortsetzbar),
+7. testet, ob das Sprachmodell auf der Grafikkarte richtig rechnet (sonst CPU),
+8. legt die Verknüpfungen **Music Generator ON / OFF** im Programmordner und auf dem Desktop an und startet die App.
 
 Er kann jederzeit erneut laufen; Erledigtes wird übersprungen.
 Optionen (in der PowerShell): `.\Windows-Install.ps1 -Yes`, `-LM 0.6B|1.7B|4B`, `-Cpu` (Sprachmodell immer auf der CPU rechnen, auch in der App unter Zahnrad wählbar; `-Auto` stellt zurück), `-XL` (zusätzlich das größere XL-Klangmodell, 5,3 GB, ab 12 GB Grafikspeicher; danach unter Zahnrad › Klangmodell wählbar), `-NoStart`,
@@ -46,6 +48,8 @@ Optionen (in der PowerShell): `.\Windows-Install.ps1 -Yes`, `-LM 0.6B|1.7B|4B`, 
 
 - **Music Generator ON** startet Modellserver und App und öffnet http://localhost:8765
 - **Music Generator OFF** beendet alles (Browser-Tabs bleiben offen)
+- Zum Starten reicht die Verknüpfung **Music Generator ON** auf dem Desktop oder im Programmordner. Im Ordner liegen daneben die Dateien `Music Generator ON.bat` und `.ps1`; Windows blendet die Endungen oft aus, deshalb sieht man dort zwei bis drei Einträge mit demselben Namen. Die Verknüpfung (mit dem grünen Symbol) oder die `.bat` doppelklicken, nicht die `.ps1` (die öffnet sich sonst im Editor). Nach einem Neustart von Windows einfach wieder **ON** doppelklicken, die Server starten nicht von selbst.
+- **IT und VAR** (unter jedem Song und unter „Erweitert“): **IT** sind die Iterationen der Klangerzeugung, mehr Schritte klingen sauberer und dauern länger (Standard 80; 30 reicht zum Ausprobieren). **VAR** ist die Varianz des Sprachmodells, höher heißt freier und abwechslungsreicher, niedriger hält sich enger an Stil und Prompt (Standard 1,2).
 
 ## Virenscanner schlägt Alarm
 
@@ -78,7 +82,7 @@ Der Quellcode von acestep.cpp liegt offen auf [GitHub](https://github.com/Serveu
 ## Wenn etwas nicht geht
 
 - **Modellserver startet nicht, Meldung wegen fehlender DLL:** NVIDIA-Treiber aktualisieren.
-  Die Binaries bringen CUDA selbst mit, brauchen aber einen Treiber, der zur CUDA-Version passt.
+  Das Archiv enthält `ggml-cuda.dll`, aber nicht die CUDA-Bibliothek `cublas64_13.dll` (bei einem früheren Test fehlte genau sie). Fehlt sie auf dem Rechner, lädt `ggml-cuda.dll` nicht und der Modellserver nimmt Vulkan oder CPU; das ist langsamer, aber es geht. Der Installer lädt sie bei passender NVIDIA-Karte nach Rückfrage selbst von NVIDIA; wer ihn schon vorher benutzt hat, startet `Windows-Install.bat` noch einmal. Ob CUDA 13 (Toolkit oder Laufzeit) auf einer RTX-Karte nötig ist, ist bei uns noch nicht praktisch geprüft.
 - **Alles sehr langsam:** In `data/ace-server.err.log` nachsehen, welches Backend gewählt wurde
   (`[Load] ... backend: CUDA0` oder `Vulkan0` ist richtig, `CPU` falsch).
 - **`ErrorOutOfDeviceMemory` im Log, Song endet mit Fehler:** Der Grafikspeicher reicht nicht.

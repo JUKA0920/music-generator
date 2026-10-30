@@ -124,6 +124,9 @@ def init():
         for name in ("check_result", "approval", "approval_at"):
             if name not in spalten:
                 _con.execute(f"ALTER TABLE songs ADD COLUMN {name} TEXT")
+        # Beginn der Berechnung (created_at ist der Zeitpunkt des Einreihens; wartende Songs würden sonst die Wartezeit mitzählen)
+        if "started_at" not in spalten:
+            _con.execute("ALTER TABLE songs ADD COLUMN started_at TEXT")
         # Nach einem Absturz hängengebliebene Jobs wieder einreihen
         _con.execute("UPDATE songs SET status='queued', message=NULL WHERE status='running'")
         _con.commit()

@@ -1,25 +1,56 @@
 # Music Generator
 
-Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud.
-Web-Oberfläche für [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) über
+Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud. Web-Oberfläche für [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) über
 [acestep.cpp](https://github.com/ServeurpersoCom/acestep.cpp).
 
-- **Mac** (Apple Silicon, Metal): diese Seite. Ausführliche Anleitung mit Bildern: **[Installationsanleitung.pdf](Installationsanleitung.pdf)**
-- **Windows** (NVIDIA, CUDA/Vulkan): **[README-WINDOWS.md](README-WINDOWS.md)**
-- Anleitung in anderen Sprachen: **[Installation-Guide-EN.pdf](Installation-Guide-EN.pdf)** (English), **[Installation-Guide-ZH.pdf](Installation-Guide-ZH.pdf)** (中文)
+<p align="center"><img src="docs/bilder/app.png" width="460" alt="Oberfläche des Music Generators: Titel, Prompt, Stil, Länge, BPM, Lyrics und Generieren"></p>
+
+## Los geht's
+
+| | **Desktop-App** (neu, ohne Terminal) | **Web-App** mit Installer |
+|---|---|---|
+| Systeme | Mac, Windows, Linux | Mac (Apple Silicon), Windows (NVIDIA), Linux |
+| Start | herunterladen, öffnen, ein Assistent lädt die Modelle | Installer im Terminal bzw. PowerShell, Anleitung unten |
+| Download | [**Releases der Desktop-App**](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases) (Version 0.1.2, Test-Version) | diese Seite, Abschnitt [Installation](#installation) |
+| Anleitung (PDF) | [Deutsch](Desktop-App-Anleitung.pdf) · [English](Desktop-App-Guide-EN.pdf) · [中文](Desktop-App-Guide-ZH.pdf) | [Deutsch](Installationsanleitung.pdf) · [English](Installation-Guide-EN.pdf) · [中文](Installation-Guide-ZH.pdf) |
+| Videos | [Desktop-App](https://youtu.be/utlWx3HEIAg) | [Windows](https://youtu.be/se2g3tRFzrg) · [Mac](https://youtu.be/FxNSXj_wMBQ) |
+
+Die Web-App bleibt bestehen (auch für Linux mit CUDA oder ROCm und ältere Macs). Neue Funktionen entstehen künftig in der Desktop-App. Windows-Web-App: [README-WINDOWS.md](README-WINDOWS.md).
+
+## Neu: die Desktop-App (ohne Terminal)
+
+Kein Git, kein Python, kein Installationsbefehl. Entwickelt gemeinsam mit **Frank Hildebrandt** ([@frankhildebrandt](https://github.com/frankhildebrandt)), dem dafür ausdrücklich gedankt sei.
+
+- **Welche Datei?** Auf der Download-Seite den obersten Eintrag öffnen und unten **„Assets“** aufklappen (nicht „Source code“). Windows: [Music-Generator-0.1.2-windows-x64.zip](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases/download/v0.1.2/Music-Generator-0.1.2-windows-x64.zip) (entpacken, dann die App darin starten). Mac mit Apple Silicon (M1 bis M4): `…-macos-arm64.dmg`, Mac mit Intel: `…-macos-x64.dmg`. Linux: `…-linux-x64.AppImage`. Die Dateien mit `.sha256` und `original-builds` brauchst du nicht.
+- **Sicherheitsabfrage:** macOS und Windows zeigen beim ersten Start eine Abfrage, weil die App nicht signiert ist. Das steht in der Anleitung.
+- **Wer die Web-App schon nutzt:** Die Desktop-App kann deine Bibliothek übernehmen; beide laufen unabhängig voneinander.
+
+<details>
+<summary><b>Probleme mit Version 0.1.2</b> (Start fehlgeschlagen, schwarzes Fenster)</summary>
+
+- **Startet die App nicht** („Start fehlgeschlagen“, „Der Start konnte nicht abgeschlossen werden“)? Das ist ein bekannter Fehler der Test-Version 0.1.2, an einer Korrektur wird gearbeitet. Erst „Erneut versuchen“, dann die App ganz beenden und neu starten. Hilft das nicht, nutze die Web-App (Installation weiter unten, für Windows [README-WINDOWS.md](README-WINDOWS.md)); sie läuft unabhängig davon.
+- **Das Fenster bleibt schwarz** (kommt unter Windows gelegentlich vor)? Das Fenster **minimieren und wieder öffnen**, dann erscheint die Oberfläche sofort. Auch das ist ein bekannter Fehler der Test-Version.
+
+</details>
+
+**Web-App im Überblick:**
+- **Mac** (Apple Silicon, Metal): diese Seite
+- **Windows** (NVIDIA, CUDA/Vulkan): [README-WINDOWS.md](README-WINDOWS.md)
 - **Linux** (Arch Linux / Derivate mit Installer, andere Distributionen von Hand): Abschnitt [Linux](#linux-arch-linux--derivate) unten
-- **Videos zur Installation:** [Windows](https://youtu.be/se2g3tRFzrg) · [Mac](https://youtu.be/FxNSXj_wMBQ)
 
 ## Installation
 
-Voraussetzungen: Mac mit Apple Silicon (M1 oder neuer), mindestens 8 GB Arbeitsspeicher, 7–11 GB frei.
-
-**Intel-Macs** gehen nur eingeschränkt: Der Installer kompiliert den Modellserver selbst (etwa 2 Minuten, braucht die Xcode-Kommandozeilenwerkzeuge), und alles rechnet auf der CPU, weil die Intel-Grafik zu wenig Speicher hat. Gemessen auf einem MacBook Pro mit Core i5 und 8 GB: ein 30-Sekunden-Song brauchte etwa 13 Minuten, ein 10-Sekunden-Song etwa 1,5 Minuten. Längere Songs laufen leicht in die 30-Minuten-Grenze (Zahnrad › Timeout). Der Installer dauert dort rund 45 Minuten.
+Voraussetzungen: Mac mit Apple Silicon (M1 oder neuer), mindestens 8 GB Arbeitsspeicher, 7–11 GB frei. Intel-Macs gehen nur eingeschränkt (alles rechnet auf der CPU, Details unten).
 
 ```bash
 git clone https://github.com/rabbitfiremediacreation/music-generator.git ~/MusicGenerator
 open ~/MusicGenerator/Mac-Install.command
 ```
+
+<details>
+<summary><b>Intel-Macs, was der Installer macht, Optionen, XL-Klangmodell</b></summary>
+
+**Intel-Macs** gehen nur eingeschränkt: Der Installer kompiliert den Modellserver selbst (etwa 2 Minuten, braucht die Xcode-Kommandozeilenwerkzeuge), und alles rechnet auf der CPU, weil die Intel-Grafik zu wenig Speicher hat. Gemessen auf einem MacBook Pro mit Core i5 und 8 GB: ein 30-Sekunden-Song brauchte etwa 13 Minuten, ein 10-Sekunden-Song etwa 1,5 Minuten. Längere Songs laufen leicht in die 30-Minuten-Grenze (Zahnrad › Timeout). Der Installer dauert dort rund 45 Minuten.
 
 Der Installer
 
@@ -40,14 +71,17 @@ Die fertigen Mac-Programmdateien sind aus dem unveränderten Quelltext von acest
 
 **XL-Klangmodell (optional):** Der Installer fragt, ob zusätzlich das größere Klangmodell ACE-Step 1.5 XL (4 statt 2 Milliarden Parameter, 5,3 GB) geladen werden soll. Laut den Entwicklern klingt es besser, es rechnet etwa doppelt so lange und braucht mehr Speicher (ab 16 GB Arbeitsspeicher bzw. 12 GB Grafikspeicher). Standard bleibt das kleinere Modell; XL wählst du danach unter Zahnrad › Klangmodell. Gemessen auf einem M4 mit 16 GB: ein 30-Sekunden-Song brauchte mit Standard 49 s, mit XL 99 s. Noch wenig getestet, Rückmeldungen willkommen.
 
+</details>
+
 ## Benutzen
 
 - **Music Generator ON** startet Modellserver und App und öffnet http://localhost:8765
 - **Music Generator OFF** beendet alles und schließt die Browser-Tabs
 - Oberfläche in zwölf Sprachen (Auswahl oben rechts): Deutsch, Englisch, Spanisch, Französisch, Italienisch, Portugiesisch, Türkisch, Polnisch, Russisch, Ukrainisch, Japanisch, Chinesisch. Korrekturen an `static/i18n.js` sind willkommen.
 - **Höhen ausgleichen:** Der Klang-Decoder des Modells verliert hohe Töne (über 16 kHz rund 8 dB), die Songs klingen dadurch dumpf. Unter Zahnrad › Höhen ausgleichen hebt **An** die Höhen über 12 kHz sanft an (+6 dB) und begrenzt danach die Spitze. Gilt für neue Songs, Standard ist **Aus**. Unabhängig davon schneidet der Modellserver seit dieser Fassung keine Spitzen mehr ab (`peak_clip: 0`).
-- **Export:** Unter Zahnrad › Export wählst du, ob der Download (auch das ZIP) als **WAV** (verlustfrei, wie erzeugt) oder als **MP3** (192 kbit/s, deutlich kleiner) kommt. Die Bibliothek behält immer das WAV; MP3 wird beim Download daraus gemacht und zwischengespeichert (`data/export`, darf gelöscht werden).
+- **Export:** Unter Zahnrad › Export wählst du, ob der Download (auch das ZIP) als **WAV** (verlustfrei, wie erzeugt) oder als **MP3** (192 kbit/s, deutlich kleiner) kommt. Die Bibliothek behält immer das WAV; MP3 wird beim Download daraus gemacht und zwischengespeichert (`data/export`, darf gelöscht werden). Ist MP3 ausgegraut, fehlt der Wandler `mp3-codec` der Engine (Mac-Installationen vom 16. bis 24. Oktober 2026 mit fertigen Programmdateien): einmal **Mac-Install** erneut ausführen, er lädt die ergänzten Programmdateien nach.
 - **Länge:** 10 Sekunden bis 10 Minuten (Obergrenze der Klangerzeugung). Ab 5 Minuten dauert es lange und braucht viel Speicher: Gemessen mit Standard-Klangmodell und 80 Iterationen brauchte ein 10-Minuten-Song auf einem Mac mit 16 GB etwa 21 Minuten, auf einer GTX 1060 (6 GB) etwa 32 Minuten. Auf 8-GB-Rechnern und Intel-Macs ist das ungetestet.
+- **IT und VAR** (unter jedem Song und unter „Erweitert“): **IT** sind die Iterationen der Klangerzeugung, mehr Schritte klingen sauberer und dauern länger (Standard 80; 30 reicht zum Ausprobieren). **VAR** ist die Varianz des Sprachmodells, höher heißt freier und abwechslungsreicher, niedriger hält sich enger an Stil und Prompt (Standard 1,2; zerfahrene Songs mit 0,8 bis 1,0 probieren).
 - **Idee aufnehmen** (Mikrofon-Knopf oben in der Kopfzeile): gedrückt halten, 5 bis 30 Sekunden summen, pfeifen oder singen. Die App beschreibt die Aufnahme und füllt Prompt, Tempo, Tonart und Takt aus; Stil und Länge bestimmst du. Die Melodie selbst wird nicht übernommen. Es wird nichts gespeichert, alles läuft lokal.
 
 ### Bedienung mit Screenreader
@@ -88,7 +122,7 @@ Das Skript zeigt, was es entfernt, und fragt vorher. Es beendet die Server, lös
 
 ## Linux (Arch Linux & Derivate)
 
-Der automatische Installer ist **nur für Arch Linux** und Derivate (CachyOS, EndeavourOS, Manjaro), er nutzt `pacman`. Auf Ubuntu/Debian/Fedora bitte die Einrichtung [von Hand](#andere-linux-distributionen-von-hand) unten nehmen (nur CPU: statt `buildcpu.sh` geht auch `cmake -S . -B build -DGGML_NATIVE=ON && cmake --build build -j`). **Ubuntu und Linux Mint (experimentell, von Jano69, mit Anregungen aus der Community, noch nicht auf echter Hardware von uns getestet):** `./ubuntu.sh --dry-run` zeigt den Ablauf, `./ubuntu.sh --install-only` installiert über apt und wählt das Backend selbst: CUDA bei NVIDIA mit installiertem Toolkit, Vulkan bei AMD-, Intel- oder NVIDIA-Grafik mit Vulkan-Treiber, sonst CPU. Mit `--backend cuda|vulkan|cpu` lässt es sich vorgeben (Vulkan installiert dafür die Pakete `libvulkan-dev`, `mesa-vulkan-drivers`, `glslc`, `libshaderc-dev`, `spirv-headers`). `./ubuntu.sh --start` startet. Für Arch Linux (sowie CachyOS, EndeavourOS, Manjaro) steht ein automatisches All-in-One-Skript bereit (bereitgestellt von ZeroDot1):
+Der automatische Installer ist **nur für Arch Linux** und Derivate (CachyOS, EndeavourOS, Manjaro), er nutzt `pacman`. Auf Ubuntu/Debian/Fedora bitte die Einrichtung [von Hand](#andere-linux-distributionen-von-hand) unten nehmen (nur CPU: statt `buildcpu.sh` geht auch `cmake -S . -B build -DGGML_NATIVE=ON && cmake --build build -j`). **Ubuntu und Linux Mint (experimentell, von Jano69, mit Anregungen aus der Community; von zwei Nutzern auf Linux Mint erfolgreich ausprobiert, AMD-Grafik mit Vulkan lief schnell, einmal mit Hinweisen zur Wiedergabequalität; auf unserer eigenen Hardware nicht getestet; Schritt für Schritt auch auf der letzten Seite der Installationsanleitung):** `./ubuntu.sh --dry-run` zeigt den Ablauf, `./ubuntu.sh --install-only` installiert über apt und wählt das Backend selbst: CUDA bei NVIDIA mit installiertem Toolkit, Vulkan bei AMD-, Intel- oder NVIDIA-Grafik mit Vulkan-Treiber, sonst CPU. Mit `--backend cuda|vulkan|cpu` lässt es sich vorgeben (Vulkan installiert dafür die Pakete `libvulkan-dev`, `mesa-vulkan-drivers`, `glslc`, `libshaderc-dev`, `spirv-headers`). `./ubuntu.sh --start` startet. Für Arch Linux (sowie CachyOS, EndeavourOS, Manjaro) steht ein automatisches All-in-One-Skript bereit (bereitgestellt von ZeroDot1):
 
 ```bash
 git clone https://github.com/rabbitfiremediacreation/music-generator.git ~/MusicGenerator

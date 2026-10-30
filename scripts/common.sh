@@ -32,12 +32,19 @@ ENGINE_WIN_REV="6013134"
 ENGINE_WIN_URL="https://github.com/rabbitfiremediacreation/music-generator/releases/download/engine-win64-6013134/acestep-cpp-win64-6013134.zip"
 # shellcheck disable=SC2034
 ENGINE_WIN_SHA256="647f4ffd1cb2f2e20ac3d54e92a45ed83d3cf9278e55e8b4da1c788fbfb74ac2"
+# Nur Windows: cuBLAS 13 von NVIDIA (ggml-cuda.dll braucht cublas64_13.dll, das Archiv oben bringt sie nicht mit).
+# Der Installer lädt das Archiv direkt von NVIDIA (nicht von uns), prüft die SHA-256 (aus NVIDIAs redistrib_13.0.2.json,
+# selbst nachgerechnet) und kopiert nur cublas64_13.dll und cublasLt64_13.dll neben ace-server.exe.
+# shellcheck disable=SC2034
+CUBLAS_WIN_URL="https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/libcublas-windows-x86_64-13.1.0.3-archive.zip"
+# shellcheck disable=SC2034
+CUBLAS_WIN_SHA256="4ac4847bbe4f7709b244956fcfc32197a2954ee70b155cb67eebd9ee26f7e339"
 # Nur Mac: fertige Programmdateien (aus ACESTEP_REV gebaut, alle drei Apple-CPU-Varianten, ab macOS 26) als eigene
 # Veröffentlichung im Projekt. Ältere macOS-Versionen und "Mac-Install.command --build" bauen weiterhin selbst.
 ENGINE_MAC_REV="b7ba6d9"
 ENGINE_MAC_MIN_OS=26
-ENGINE_MAC_URL="https://github.com/rabbitfiremediacreation/music-generator/releases/download/engine-macos-arm64-b7ba6d9/acestep-cpp-macos-arm64-b7ba6d9.zip"
-ENGINE_MAC_SHA256="dee4327b9e14882f8acae1aeef5f97e19327a5444ce2dd7357e22295fb8df915"
+ENGINE_MAC_URL="https://github.com/rabbitfiremediacreation/music-generator/releases/download/engine-macos-arm64-b7ba6d9-2/acestep-cpp-macos-arm64-b7ba6d9-2.zip"   # zweite Ausgabe: mit mp3-codec
+ENGINE_MAC_SHA256="95daee3a8c54b3edf1e390992e01581edb8a1f0c29971532397be36fc5c47951"
 
 export PATH="$HOME/.local/bin:/opt/rocm/bin:/opt/cuda/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 [ -d "/opt/rocm/lib" ] && export LD_LIBRARY_PATH="/opt/rocm/lib:${LD_LIBRARY_PATH:-}"

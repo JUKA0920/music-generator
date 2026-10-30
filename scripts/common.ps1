@@ -12,7 +12,7 @@ $CONF   = Join-Path $DATA "engine.conf"      # vom Installer geschrieben: MODE, 
 # sowie die Modell-Tabelle MODEL_FILES (Name:MB:SHA-256, eine Datei je Zeile)
 $MODEL_SHA = @{}; $MODEL_MB = @{}
 foreach ($line in Get-Content (Join-Path $PSScriptRoot "common.sh")) {
-    if ($line -match '^(PORT|SYNTH_PORT|LM_PORT|ACESTEP_REPO|ACESTEP_REV|HF_BASE|ENGINE_WIN_REV|ENGINE_WIN_URL|ENGINE_WIN_SHA256)="?([^"#]+?)"?\s*(#.*)?$') {
+    if ($line -match '^(PORT|SYNTH_PORT|LM_PORT|ACESTEP_REPO|ACESTEP_REV|HF_BASE|ENGINE_WIN_REV|ENGINE_WIN_URL|ENGINE_WIN_SHA256|CUBLAS_WIN_URL|CUBLAS_WIN_SHA256)="?([^"#]+?)"?\s*(#.*)?$') {
         Set-Variable -Name $Matches[1] -Value $Matches[2].Trim()
     }
     if ($line -match '^(?:MODEL_FILES=")?([\w.-]+\.gguf):(\d+):([0-9a-f]{64})"?$') {
