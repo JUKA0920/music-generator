@@ -2,7 +2,7 @@
 
 Aufruf: build_desktop_pdf.py <ausgabe.pdf> [sprache]   (Texte in texts_desktop.py)
 Nutzt Schriften, Farben und Bausteine (header, h2, para, code, note, table, footer, logo, badge) aus build_pdf.py.
-Screenshots folgen mit Version 0.1.2.
+Screenshots folgen.
 """
 import sys
 from pathlib import Path
