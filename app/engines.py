@@ -10,6 +10,7 @@ import asyncio
 import email
 import email.policy
 import json
+import re
 import time
 from pathlib import Path
 from typing import Awaitable, Callable
@@ -137,16 +138,32 @@ class AceStepCpp:
         req["synth_model"] = self.dit_model
         if self.lm_model:
             req["lm_model"] = self.lm_model
+        # Leeres Textfeld mit Gesang: Das Sprachmodell erfindet die Lyrics selbst. Dann braucht es den ausgeschriebenen Sprachnamen
+        # ("de" versteht es nicht, heraus kommt z. B. Türkisch) und höchstens die Modell-Vorgabe 0.85 als Temperatur, sonst zerfallen
+        # die Texte in Zeichen aus fremden Sprachen. Messreihen von vollhonk26 in music-generator-desktop#54.
+        code = req.get("vocal_language", "")
+        invent = not str(params.get("lyrics") or "").strip()
+        lm_req = dict(req)
+        if code in LANGUAGE_NAMES:
+            lm_req["vocal_language"] = LANGUAGE_NAMES[code]
+        if invent:
+            lm_req["lm_temperature"] = min(float(req.get("lm_temperature") or INVENTED_LYRICS_TEMPERATURE), INVENTED_LYRICS_TEMPERATURE)
         start = time.monotonic()   # zählt über beide Phasen (Sprachmodell + Synthese) durch
         async with httpx.AsyncClient(timeout=60) as c:
-            # 1) Sprachmodell: Songstruktur + Audio-Codes
-            r = await c.post(f"{self.lm_base}/lm", json=req)
-            if r.status_code >= 400:
-                raise EngineError(f"/lm: HTTP {r.status_code} {r.text[:300]}")
-            res = await self._wait(c, self.lm_base, str(r.json()["id"]), "Sprachmodell", start, progress)
-            enriched = res.json()
-            if isinstance(enriched, list):
-                enriched = enriched[0]
+            # 1) Sprachmodell: Songstruktur + Audio-Codes. Liefert es bei erfundenem Gesang nur "[Instrumental]", noch einmal würfeln
+            # (der Seed des Sprachmodells ist nicht gesetzt, jeder Versuch zieht neu; der Song-Seed bleibt gleich).
+            for attempt in range(1 + LM_RETRIES):
+                r = await c.post(f"{self.lm_base}/lm", json=lm_req)
+                if r.status_code >= 400:
+                    raise EngineError(f"/lm: HTTP {r.status_code} {r.text[:300]}")
+                res = await self._wait(c, self.lm_base, str(r.json()["id"]), "Sprachmodell", start, progress)
+                enriched = res.json()
+                if isinstance(enriched, list):
+                    enriched = enriched[0]
+                if not (invent and code and _missing_vocals(enriched.get("lyrics"))):
+                    break
+            if code:
+                enriched["vocal_language"] = code   # Synthese und Bibliothek bekommen wieder den Code
             if not enriched.get("audio_codes"):
                 raise EngineError("Sprachmodell hat keine Audio-Codes geliefert (LM auf Metal? LM-Server auf CPU nutzen)")
             # Die Klangerzeugung schafft höchstens 3000 Codes (600 s bei 5 Codes je Sekunde, 15000 Latent-Frames). Das Sprachmodell
@@ -189,6 +206,19 @@ class AceStepCpp:
 
 
 MAX_SECONDS = 600   # Obergrenze der Klangerzeugung (15000 Latent-Frames)
+
+LANGUAGE_NAMES = {
+    "en": "English", "de": "German", "fr": "French", "es": "Spanish", "it": "Italian",
+    "pt": "Portuguese", "ja": "Japanese", "ko": "Korean", "zh": "Chinese", "ru": "Russian",
+}
+INVENTED_LYRICS_TEMPERATURE = 0.85
+LM_RETRIES = 2
+
+
+def _missing_vocals(lyrics) -> bool:
+    """Gesang bestellt, aber das Sprachmodell hat keine Worte geliefert (nur "[Instrumental]" oder Abschnittsmarken)."""
+    text = re.sub(r"\[[^\]]*\]", "", str(lyrics or ""))
+    return not re.search(r"\w", text)
 
 
 _LOGS = ("ace-server.log", "ace-server.err.log")   # unter Windows landen Fehler in der .err.log
