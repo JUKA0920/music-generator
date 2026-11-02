@@ -11,7 +11,7 @@ Eigene Songs lokal erzeugen – ohne Limits, ohne Abo, ohne Cloud. Web-Oberfläc
 |---|---|---|
 | Systeme | Mac, Windows, Linux | Mac (Apple Silicon), Windows (NVIDIA), Linux |
 | Start | herunterladen, öffnen, ein Assistent lädt die Modelle | Installer im Terminal bzw. PowerShell, Anleitung unten |
-| Download | [**Releases der Desktop-App**](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases) (Version 0.1.2, Test-Version) | diese Seite, Abschnitt [Installation](#installation) |
+| Download | [**Releases der Desktop-App**](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases) (Version 0.1.3, Test-Version) | diese Seite, Abschnitt [Installation](#installation) |
 | Anleitung (PDF) | [Deutsch](Desktop-App-Anleitung.pdf) · [English](Desktop-App-Guide-EN.pdf) · [中文](Desktop-App-Guide-ZH.pdf) | [Deutsch](Installationsanleitung.pdf) · [English](Installation-Guide-EN.pdf) · [中文](Installation-Guide-ZH.pdf) |
 | Videos | [Desktop-App](https://youtu.be/utlWx3HEIAg) | [Windows](https://youtu.be/se2g3tRFzrg) · [Mac](https://youtu.be/FxNSXj_wMBQ) |
 
@@ -21,15 +21,15 @@ Die Web-App bleibt bestehen (auch für Linux mit CUDA oder ROCm und ältere Macs
 
 Kein Git, kein Python, kein Installationsbefehl. Entwickelt gemeinsam mit **Frank Hildebrandt** ([@frankhildebrandt](https://github.com/frankhildebrandt)), dem dafür ausdrücklich gedankt sei.
 
-- **Welche Datei?** Auf der Download-Seite den obersten Eintrag öffnen und unten **„Assets“** aufklappen (nicht „Source code“). Windows: [Music-Generator-0.1.2-windows-x64.zip](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases/download/v0.1.2/Music-Generator-0.1.2-windows-x64.zip) (entpacken, dann die App darin starten). Mac mit Apple Silicon (M1 bis M4): `…-macos-arm64.dmg`, Mac mit Intel: `…-macos-x64.dmg`. Linux: `…-linux-x64.AppImage`. Die Dateien mit `.sha256` und `original-builds` brauchst du nicht.
+- **Welche Datei?** Auf der Download-Seite den obersten Eintrag öffnen und unten **„Assets“** aufklappen (nicht „Source code“). Windows: [Music-Generator-0.1.3-windows-x64.msi](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases/download/v0.1.3/Music-Generator-0.1.3-windows-x64.msi) (Installer mit Startmenüeintrag) oder ohne Installation [Music-Generator-0.1.3-windows-x64.zip](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases/download/v0.1.3/Music-Generator-0.1.3-windows-x64.zip) (entpacken, dann die App darin starten). Mac mit Apple Silicon (M1 bis M4): `…-macos-arm64.dmg`, Mac mit Intel: `…-macos-x64.dmg`. Linux: `…-linux-x64.AppImage`, für NVIDIA `…-linux-x64-cuda.AppImage`. Die Dateien mit `.sha256` und `original-builds` brauchst du nicht.
 - **Sicherheitsabfrage:** macOS und Windows zeigen beim ersten Start eine Abfrage, weil die App nicht signiert ist. Das steht in der Anleitung.
 - **Wer die Web-App schon nutzt:** Die Desktop-App kann deine Bibliothek übernehmen; beide laufen unabhängig voneinander.
 
 <details>
-<summary><b>Probleme mit Version 0.1.2</b> (Start fehlgeschlagen, schwarzes Fenster)</summary>
+<summary><b>Probleme beim Start</b> (schwarzes Fenster, Start fehlgeschlagen)</summary>
 
-- **Startet die App nicht** („Start fehlgeschlagen“, „Der Start konnte nicht abgeschlossen werden“)? Das ist ein bekannter Fehler der Test-Version 0.1.2, an einer Korrektur wird gearbeitet. Erst „Erneut versuchen“, dann die App ganz beenden und neu starten. Hilft das nicht, nutze die Web-App (Installation weiter unten, für Windows [README-WINDOWS.md](README-WINDOWS.md)); sie läuft unabhängig davon.
-- **Das Fenster bleibt schwarz** (kommt unter Windows gelegentlich vor)? Das Fenster **minimieren und wieder öffnen**, dann erscheint die Oberfläche sofort. Auch das ist ein bekannter Fehler der Test-Version.
+- **Startet die App nicht** („Start fehlgeschlagen“, „Der Start konnte nicht abgeschlossen werden“)? Das war ein bekannter Fehler der Version 0.1.2 und ist in 0.1.3 behoben, also zuerst auf 0.1.3 wechseln. Kommt es trotzdem vor: erst „Erneut versuchen“, dann die App ganz beenden und neu starten. Hilft das nicht, nutze die Web-App (Installation weiter unten, für Windows [README-WINDOWS.md](README-WINDOWS.md)); sie läuft unabhängig davon.
+- **Das Fenster bleibt schwarz** (kommt unter Windows gelegentlich vor)? Das Fenster **minimieren und wieder öffnen**, dann erscheint die Oberfläche sofort. Das ist auch in 0.1.3 noch ein bekannter Fehler, an einer Korrektur wird gearbeitet.
 
 </details>
 
@@ -81,7 +81,7 @@ Die fertigen Mac-Programmdateien sind aus dem unveränderten Quelltext von acest
 - **Höhen ausgleichen:** Der Klang-Decoder des Modells verliert hohe Töne (über 16 kHz rund 8 dB), die Songs klingen dadurch dumpf. Unter Zahnrad › Höhen ausgleichen hebt **An** die Höhen über 12 kHz sanft an (+6 dB) und begrenzt danach die Spitze. Gilt für neue Songs, Standard ist **Aus**. Unabhängig davon schneidet der Modellserver seit dieser Fassung keine Spitzen mehr ab (`peak_clip: 0`).
 - **Export:** Unter Zahnrad › Export wählst du, ob der Download (auch das ZIP) als **WAV** (verlustfrei, wie erzeugt) oder als **MP3** (192 kbit/s, deutlich kleiner) kommt. Die Bibliothek behält immer das WAV; MP3 wird beim Download daraus gemacht und zwischengespeichert (`data/export`, darf gelöscht werden). Ist MP3 ausgegraut, fehlt der Wandler `mp3-codec` der Engine (Mac-Installationen vom 16. bis 24. Oktober 2026 mit fertigen Programmdateien): einmal **Mac-Install** erneut ausführen, er lädt die ergänzten Programmdateien nach.
 - **Länge:** 10 Sekunden bis 10 Minuten (Obergrenze der Klangerzeugung). Ab 5 Minuten dauert es lange und braucht viel Speicher: Gemessen mit Standard-Klangmodell und 80 Iterationen brauchte ein 10-Minuten-Song auf einem Mac mit 16 GB etwa 21 Minuten, auf einer GTX 1060 (6 GB) etwa 32 Minuten. Auf 8-GB-Rechnern und Intel-Macs ist das ungetestet.
-- **IT und VAR** (unter jedem Song und unter „Erweitert“): **IT** sind die Iterationen der Klangerzeugung, mehr Schritte klingen sauberer und dauern länger (Standard 80; 30 reicht zum Ausprobieren). **VAR** ist die Varianz des Sprachmodells, höher heißt freier und abwechslungsreicher, niedriger hält sich enger an Stil und Prompt (Standard 1,2; zerfahrene Songs mit 0,8 bis 1,0 probieren).
+- **IT und VAR** (unter jedem Song und unter „Erweitert“): **IT** sind die Iterationen der Klangerzeugung, mehr Schritte klingen sauberer und dauern länger (Standard 80; 30 reicht zum Ausprobieren). **VAR** ist die Varianz des Sprachmodells, höher heißt freier und abwechslungsreicher, niedriger hält sich enger an Stil und Prompt (Standard 0,85).
 - **Idee aufnehmen** (Mikrofon-Knopf oben in der Kopfzeile): gedrückt halten, 5 bis 30 Sekunden summen, pfeifen oder singen. Die App beschreibt die Aufnahme und füllt Prompt, Tempo, Tonart und Takt aus; Stil und Länge bestimmst du. Die Melodie selbst wird nicht übernommen. Es wird nichts gespeichert, alles läuft lokal.
 
 ### Bedienung mit Screenreader

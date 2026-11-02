@@ -1,6 +1,6 @@
 # Music Generator für Windows
 
-> **Neu:** Für Windows gibt es jetzt auch eine **Desktop-App** ohne PowerShell und Git: ZIP laden, entpacken, öffnen. Download und Anleitung: [Desktop-App-Anleitung.pdf](Desktop-App-Anleitung.pdf) und [github.com/rabbitfiremediacreation/music-generator-desktop/releases](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases). Diese Seite beschreibt die Web-App mit Installer, die weiter gepflegt wird.
+> **Neu:** Für Windows gibt es jetzt auch eine **Desktop-App** ohne PowerShell und Git: Installer (MSI) laden und ausführen oder ZIP laden, entpacken, öffnen. Download und Anleitung: [Desktop-App-Anleitung.pdf](Desktop-App-Anleitung.pdf) und [github.com/rabbitfiremediacreation/music-generator-desktop/releases](https://github.com/rabbitfiremediacreation/music-generator-desktop/releases). Diese Seite beschreibt die Web-App mit Installer, die weiter gepflegt wird.
 
 Gleiche App wie auf dem Mac, Modellserver läuft über CUDA auf der NVIDIA-Grafikkarte.
 Der Installer lädt die fertigen Windows-Programmdateien von acestep.cpp in einer festen, geprüften Version (kein Compiler nötig).
@@ -49,7 +49,7 @@ Optionen (in der PowerShell): `.\Windows-Install.ps1 -Yes`, `-LM 0.6B|1.7B|4B`, 
 - **Music Generator ON** startet Modellserver und App und öffnet http://localhost:8765
 - **Music Generator OFF** beendet alles (Browser-Tabs bleiben offen)
 - Zum Starten reicht die Verknüpfung **Music Generator ON** auf dem Desktop oder im Programmordner. Im Ordner liegen daneben die Dateien `Music Generator ON.bat` und `.ps1`; Windows blendet die Endungen oft aus, deshalb sieht man dort zwei bis drei Einträge mit demselben Namen. Die Verknüpfung (mit dem grünen Symbol) oder die `.bat` doppelklicken, nicht die `.ps1` (die öffnet sich sonst im Editor). Nach einem Neustart von Windows einfach wieder **ON** doppelklicken, die Server starten nicht von selbst.
-- **IT und VAR** (unter jedem Song und unter „Erweitert“): **IT** sind die Iterationen der Klangerzeugung, mehr Schritte klingen sauberer und dauern länger (Standard 80; 30 reicht zum Ausprobieren). **VAR** ist die Varianz des Sprachmodells, höher heißt freier und abwechslungsreicher, niedriger hält sich enger an Stil und Prompt (Standard 1,2).
+- **IT und VAR** (unter jedem Song und unter „Erweitert“): **IT** sind die Iterationen der Klangerzeugung, mehr Schritte klingen sauberer und dauern länger (Standard 80; 30 reicht zum Ausprobieren). **VAR** ist die Varianz des Sprachmodells, höher heißt freier und abwechslungsreicher, niedriger hält sich enger an Stil und Prompt (Standard 0,85).
 
 ## Virenscanner schlägt Alarm
 
